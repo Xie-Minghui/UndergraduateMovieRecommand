@@ -11,7 +11,7 @@ class UsersManager(models.Manager): #用户管理函数
 		except self.model.DoesnotExist
 			user = None
 		return user
-class Users(BaseModel):
+class User(BaseModel):
 	user_id = models.AutoField(primary_key = True,verbose_name = "用户id") #自增类型
     user_name = models.CharField(max_length = 20,unique = True,verbose_name = "用户名")
     password = models.CharField(max_length = 20,verbose_name = "用户密码")
