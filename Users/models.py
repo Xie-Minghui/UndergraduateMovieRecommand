@@ -35,3 +35,6 @@ class User(BaseModel):
 
     objects = UsersManager()#用户管理类
 
+    def __str__(self):
+        return self.user_name
+
