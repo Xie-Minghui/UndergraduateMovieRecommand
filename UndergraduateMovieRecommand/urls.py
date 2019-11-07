@@ -14,8 +14,11 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path,include
+#from Movies import views as M_v
 
 urlpatterns = [
     path('control/', admin.site.urls),#修改默认后台入口路径为control/
+    path('movies/',include('Movies.urls')),
+    #path('manifest.json',M_v.indexData),
 ]
