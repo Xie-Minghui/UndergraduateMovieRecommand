@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+<<<<<<< HEAD
     'Behaviors',#添加app,谢明辉，9.2
     'Comments',
     'Filmmakers',
@@ -44,6 +45,9 @@ INSTALLED_APPS = [
     'Movies',
     'Recommend',
     'Unclassed',
+=======
+    'Movies',
+>>>>>>> 9f602decdeee887997e06ff960531095eb0a7acd
     'Users',
 ]
 
