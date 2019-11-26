@@ -37,6 +37,14 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'Behaviors',#添加app,谢明辉，9.2
+    'Comments',
+    'Filmmakers',
+    'History',
+    'Movies',
+    'Recommend',
+    'Unclassed',
+    'Users',
 ]
 
 MIDDLEWARE = [
