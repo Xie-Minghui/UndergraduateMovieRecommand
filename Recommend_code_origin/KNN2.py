@@ -30,7 +30,7 @@ def Data_process(file_path:str)->np.mat:
         max_item,max_user = 0,0
         for data_item in file:
             data_item = data_item.strip('\n')
-            data_info:list = data_item.split(' ')  #UserID::MovieID::Rating::Timestamp
+            data_info:list = data_item.split('::')  #UserID::MovieID::Rating::Timestamp
             data[int(data_info[0])-1,int(data_info[1])-1] = float(data_info[2])
             max_user = max(max_user,int(data_info[0])-1)
             max_item = max(max_item,int(data_info[1])-1)
@@ -68,7 +68,12 @@ def Cosine_similarity(inA:np.mat,inB:np.mat)->float: #调整余弦
             相似度 float
         复杂度：O(d) d为降维后的用户维度
     '''
-    numerator = float(inA.T * inB)
+    punishment_factor = [1/math.log(math.e,2+math.fabs(a - b)) for a,b in zip(inA,inB)]
+    inA2 = [(a*b)[0,0] for a,b in zip(inA,punishment_factor)]
+    inA2 = np.array(inA2)
+    inA2 = inA2.reshape(1,inA2.shape[0])
+    inA2 = np.mat(inA2)
+    numerator = float(inA2 * inB)
     denominator = np.linalg.norm(inA) + np.linalg.norm(inB) #乘法改成加法
     return numerator/denominator
 
@@ -238,7 +243,6 @@ def ItemRecommend(origin_data:np.mat,similarity_item_matrix:np.mat, user:int,k:i
     '''
     user -= 1 #user从0开始
     r,c = origin_data.shape
-    
 
     rated_item = np.nonzero(origin_data[user,:]>0)[1] #获得目标用户已评分的物品的标号
     # print('ra',rated_item)
@@ -337,9 +341,11 @@ def ItemRecommend(origin_data:np.mat,similarity_item_matrix:np.mat, user:int,k:i
     
 # def main_test():
 start = time.clock()
-file_path = 'data0.dat'  #D:/Python/Recommend/Data/ml-1m/rating2.dat
+file_path = 'data0.dat'
 origin_data = Data_process(file_path)
 print(origin_data)
+rating_denominator = np.zeros((origin_data.shape[1],origin_data.shape[1])) #相似度计算分母矩阵
+rating_nominator = np.zeros((origin_data.shape[1],origin_data.shape[1])) #相似度计算分子矩阵
 
 user = 3
 mean_centered_data = Mean_centered(origin_data)
@@ -380,31 +386,5 @@ print(end - start)
 
 '''
     工作日志，10.31下午添加了给出推荐理由的功能，推荐你i物品，因为你看过j物品
+    1.12 添加了惩罚因子（调整余弦）
 '''
-
-# 1::1::7
-# 1::2::6
-# 1::3::7
-# 1::4::4
-# 1::5::5
-# 1::6::4
-# 2::1::6
-# 2::2::7
-# 2::4::4
-# 2::5::3
-# 2::6::4
-# 3::2::3
-# 3::3::3
-# 3::4::1
-# 3::5::1
-# 4::1::1
-# 4::2::2
-# 4::3::2
-# 4::4::3
-# 4::5::3
-# 4::6::4
-# 5::1::1
-# 5::3::1
-# 5::4::2
-# 5::5::3
-# 5::6::3

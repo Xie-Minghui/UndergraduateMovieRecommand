@@ -30,7 +30,8 @@ def Data_process(file_path:str)->np.mat:
         max_item,max_user = 0,0
         for data_item in file:
             data_item = data_item.strip('\n')
-            data_info:list = data_item.split(' ')  #UserID::MovieID::Rating::Timestamp
+            data_info:list = data_item.split('\t')  #UserID::MovieID::Rating::Timestamp
+            # print(data_info)
             data[int(data_info[0])-1,int(data_info[1])-1] = float(data_info[2])
             max_user = max(max_user,int(data_info[0])-1)
             max_item = max(max_item,int(data_info[1])-1)
@@ -59,7 +60,7 @@ def Mean_centered(origin_data:np.mat)->np.mat:  #
     #         mean_centered_data[j,i] -= mean_val
     return mean_centered_data
     # return mean_centered_data.T#和上面origin_data的转置结合起来就是列均值中心化
-def Cosine_similarity(inA:np.mat,inB:np.mat)->float: #调整余弦
+def Cosine_similarity(inA:np.mat,inB:np.mat,item1:int,item2:int)->float: #调整余弦
     '''
         传入参数：
             inA np.mat 物品的评分向量（SVD降维之后）
@@ -68,8 +69,17 @@ def Cosine_similarity(inA:np.mat,inB:np.mat)->float: #调整余弦
             相似度 float
         复杂度：O(d) d为降维后的用户维度
     '''
-    numerator = float(inA.T * inB)
-    denominator = np.linalg.norm(inA) + np.linalg.norm(inB) #乘法改成加法
+    punishment_factor = [1/math.log(math.e,2+math.fabs(a - b)) for a,b in zip(inA,inB)]
+    inA2 = [(a*b)[0,0] for a,b in zip(inA,punishment_factor)]
+    inA2 = np.array(inA2)
+    inA2 = inA2.reshape(1,inA2.shape[0])
+    inA2 = np.mat(inA2)
+    numerator = float(inA2 * inB)
+    rating_nominator[item1,item2] = rating_nominator[item2,item1] = numerator  #存储分子
+    denominatorA[item1,item2] = denominatorA[item2,item1] = np.linalg.norm(inA)
+    denominatorB[item1,item2] = denominatorB[item2,item1]= np.linalg.norm(inB)
+    denominator =  denominatorA[item1,item2] * denominatorB[item1,item2] #乘法改成加法
+    rating_denominator[item1,item2] = rating_denominator[item2,item1] = denominator ** 2 #存储分母两个元素
     return numerator/denominator
 
 def Pearson_similarity(inA:np.mat,inB:np.mat)->float:
@@ -116,12 +126,15 @@ def Calculate_items(origin_data:np.mat, mean_centered_data_transf:np.mat,Similar
     r,c = mean_centered_data_transf.shape  #分别是降维后的列数（用户维度）和 物品数
    
     similarity_item_matrix = np.mat(np.zeros((c,c)))
+    print("c: %d"%c)
     for i in range(0,c):
+        print(i)
         for j in range(i+1,c):
+            # print(i,j)
             # overlap = np.nonzero(np.logical_and(origin_data[:,i].A>0,origin_data[:,j]>0))[0]
             # if i == 1 and j == 4:
             #     print('nihao',overlap)
-            similarity_item_matrix[i,j] = similarity_item_matrix[j,i] = Similarity_calculate_means(mean_centered_data[:,i],mean_centered_data[:,j])
+            similarity_item_matrix[i,j] = similarity_item_matrix[j,i] = Similarity_calculate_means(mean_centered_data[:,i],mean_centered_data[:,j],i,j)
     return similarity_item_matrix
 
 def Calculate_items_similarty(origin_data:np.mat,mean_centered_data:np.mat)->np.mat:
@@ -151,6 +164,7 @@ def Calculate_items_similarty(origin_data:np.mat,mean_centered_data:np.mat)->np.
     mean_centered_data_transf = mean_centered_data.T*U[:,:dimension]*Sigma_dimension.I #降维后的评分矩阵
     # print(mean_centered_data_transf)
     # print("奇异值分解，且降维后的矩阵：\n",mean_centered_data_transf.T)
+    print("nihao1")
     similarity_item_matrix = Calculate_items(origin_data,mean_centered_data_transf,Cosine_similarity)#Pearson_similarity
     return similarity_item_matrix
 def ItemRecommend2(origin_data:np.mat,mean_centered_data:np.mat, metric:str,user:int,k:int,predict_num:int,recommend_reasons_num:int)->np.array:
@@ -238,7 +252,6 @@ def ItemRecommend(origin_data:np.mat,similarity_item_matrix:np.mat, user:int,k:i
     '''
     user -= 1 #user从0开始
     r,c = origin_data.shape
-    
 
     rated_item = np.nonzero(origin_data[user,:]>0)[1] #获得目标用户已评分的物品的标号
     # print('ra',rated_item)
@@ -337,26 +350,33 @@ def ItemRecommend(origin_data:np.mat,similarity_item_matrix:np.mat, user:int,k:i
     
 # def main_test():
 start = time.clock()
-file_path = 'data0.dat'  #D:/Python/Recommend/Data/ml-1m/rating2.dat
+file_path = 'E:\Bigdata\ml-100k\\u.data'
 origin_data = Data_process(file_path)
-print(origin_data)
+# print(origin_data)
+origin_data[196-1,242-1] = 0.0
+origin_data[186-1,302-1] = 0.0
+rating_denominator = np.zeros((origin_data.shape[1],origin_data.shape[1])) #相似度计算分母矩阵
+denominatorA = np.mat(np.zeros((origin_data.shape[1],origin_data.shape[1])))
+denominatorB = np.mat(np.zeros((origin_data.shape[1],origin_data.shape[1])))
+rating_nominator = np.zeros((origin_data.shape[1],origin_data.shape[1])) #相似度计算分子矩阵
 
 user = 3
 mean_centered_data = Mean_centered(origin_data)
-print(mean_centered_data)  #打印均值中心化的评分矩阵
+# print(mean_centered_data)  #打印均值中心化的评分矩阵
 similarity_item_matrix=Calculate_items_similarty(origin_data,mean_centered_data)
-print(similarity_item_matrix)  #打印相似度矩阵
+# print(similarity_item_matrix)  #打印相似度矩阵
+print('nihao0')
 # r,c = similarity_item_matrix.shape
 # # print(r,c)
 # for i in range(0,c):
 #     for j in range(0,c):
 #         print(i,j,similarity_item_matrix[i,j])
-top_k_item,top_k_score,recommend_reasons_items = ItemRecommend(origin_data,similarity_item_matrix,3,2,2)
+top_k_item,top_k_score,recommend_reasons_items = ItemRecommend(origin_data,similarity_item_matrix,196,2,2)
 # top_k_item,top_k_score,recommend_reasons_items = ItemRecommend2(origin_data,mean_centered_data,'minkowski',3,2,2,2)
 
 for item,score,reason_items in zip(top_k_item,top_k_score,recommend_reasons_items):
     print()
-    print("推荐的电影：%d\n预测用户 %d 对电影 %d 的评分为：%f"%(item,user,item,score))
+    print("推荐的电影：%d\n预测用户 %d 对电影 %d 的评分为：%f"%(item+1,user,item,score))
     print("因为用户%d之前看过"%user,end = ' ')#
     for it in reason_items:
         print("电影%d"%it,end = ' ')
@@ -369,8 +389,41 @@ for item,score,reason_items in zip(top_k_item,top_k_score,recommend_reasons_item
 # print("相应的评分：")
 # print(top_k_score)
 # print("相应的推荐理由")
-# for
-# print(recommend_reasons_items)#推荐理由也可以了
+# print(recommend_reasons_items)  #推荐理由也可以了
+# print('nihao')
+while(True):
+    print("please input user item rating or -1 -1 -1 to exit!")
+    user,item,rating = map(int,input().split(" "))
+    user -= 1
+    item -= 1
+    origin_data[user,item] = rating
+    user_item = np.nonzero(origin_data[user,:])[1]
+    user_av = np.mean(origin_data[user,user_item])
+    if(user < 0):
+        break
+    for item1 in user_item:
+        # print(item1)
+        if(item1 == item):
+            continue
+        else:
+            r0 = origin_data[user,item]
+            r1 = origin_data[user,item1]
+            rating_nominator[item1,item] = rating_nominator[item,item1] = (rating_nominator[item1,item] + (r0 - user_av) * (r1 - user_av) * (1/math.log(math.e,2+math.fabs(r0 - r1))))
+            # print(type(denominatorA))
+            denominatorA[item,item1] = denominatorA[item1,item] = (denominatorA[item1,item] + (r0 - user_av) ** 2)
+            denominatorB[item,item1] = denominatorB[item1,item] = (denominatorB[item1,item] + (r1 - user_av) ** 2)
+            rating_denominator[item,item1] = rating_denominator[item1,item] = (denominatorA[item,item1] * denominatorB[item1,item])
+            similarity_item_matrix[item,item1] = similarity_item_matrix[item1,item] =rating_nominator[item1,item]/ math.sqrt(rating_denominator[item,item1])
+    top_k_item,top_k_score,recommend_reasons_items = ItemRecommend(origin_data,similarity_item_matrix,3,2,2)
+# top_k_item,top_k_score,recommend_reasons_items = ItemRecommend2(origin_data,mean_centered_data,'minkowski',3,2,2,2)
+    for item,score,reason_items in zip(top_k_item,top_k_score,recommend_reasons_items):
+        print() 
+        print("推荐的电影：%d\n预测用户 %d 对电影 %d 的评分为：%f"%(item+1,user,item,score))
+        print("因为用户%d之前看过"%user,end = ' ')#
+        for it in reason_items:
+            print("电影%d"%it,end = ' ')
+        print()
+
 end = time.clock()
 
 print(end - start)
@@ -380,31 +433,5 @@ print(end - start)
 
 '''
     工作日志，10.31下午添加了给出推荐理由的功能，推荐你i物品，因为你看过j物品
+    1.12 添加了惩罚因子（调整余弦）
 '''
-
-# 1::1::7
-# 1::2::6
-# 1::3::7
-# 1::4::4
-# 1::5::5
-# 1::6::4
-# 2::1::6
-# 2::2::7
-# 2::4::4
-# 2::5::3
-# 2::6::4
-# 3::2::3
-# 3::3::3
-# 3::4::1
-# 3::5::1
-# 4::1::1
-# 4::2::2
-# 4::3::2
-# 4::4::3
-# 4::5::3
-# 4::6::4
-# 5::1::1
-# 5::3::1
-# 5::4::2
-# 5::5::3
-# 5::6::3
