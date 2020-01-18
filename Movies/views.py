@@ -14,13 +14,20 @@ def test(request):
     # print(obj.movie_cover)
     return render(request,'react/index.html')
 
-def indexData(request):
-    print('======')
+def Return_Home_movies(request):
+    #print('======')
     result = {"success": True,
               "data":{
                   "movies":[
                       {"id": 1,
                        "title": "铤而走险",
                        "img": "https://img1.doubanio.com/view/photo/s_ratio_poster/public/p2566515717.webp",
-                       "url": "/movie/1"}]}}
+                       "url": "/movie/1"
+                       },
+                      {"id": 2,
+                       "title":"美丽人生",
+                       "img": "https://img3.doubanio.com/view/photo/s_ratio_poster/public/p2578474613.webp",
+                       "url": "movie/2"
+                      }
+                  ]}}
     return HttpResponse(json.dumps(result,ensure_ascii=False),content_type = "application/json",charset='utf-8')

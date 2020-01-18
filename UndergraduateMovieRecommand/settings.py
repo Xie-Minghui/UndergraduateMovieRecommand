@@ -25,7 +25,7 @@ SECRET_KEY = '+u5d%koo&oy5m2tw*)o5b4oh7&fagi696#i8=r#4*exbf@^xr1'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -76,10 +76,23 @@ WSGI_APPLICATION = 'UndergraduateMovieRecommand.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+#     }
+# }
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'db_for_project',
+        'USER': 'root',
+        'PASSWORD': 'MySqlxmhllly@17227016',
+        'HOST': 'gz-cdb-5clnvoq5.sql.tencentcdb.com',
+        'PORT': '60720',
+        'OPTIONS': {
+            "init_command": "SET sql_mode='STRICT_TRANS_TABLES'"
+        },
     }
 }
 
