@@ -138,10 +138,11 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
-STATIC_URL = '/static/'
+STATIC_URL = 'admin/static/'
 STATICFILES_DIRS = (
-    os.path.join(BASE_DIR,'static'),
+    #os.path.join(BASE_DIR,'admin','static'),
 )
+STATIC_ROOT = os.path.join(BASE_DIR,'collect_static') #设置静态文件的集合目录,便于nginx处理
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'upload/')
 MEDIA_URL = '/upload/' #这个是在浏览器上访问该上传文件的url的前缀

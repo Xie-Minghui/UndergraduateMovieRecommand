@@ -18,7 +18,7 @@ from django.urls import path,include
 from Movies import views as M_v
 
 urlpatterns = [
-    path('control/', admin.site.urls),#修改默认后台入口路径为control/
+    path('admin/control/', admin.site.urls),#修改默认后台入口路径为admin/control/
     path('movies/',include('Movies.urls')),
     path('api/home_movies.json',M_v.Return_Home_movies),
     #path('manifest.json',M_v.indexData),
