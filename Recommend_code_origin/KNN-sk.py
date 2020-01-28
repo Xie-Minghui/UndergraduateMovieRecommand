@@ -136,11 +136,13 @@ def Calculate_items_similarty(origin_data:np.mat,mean_centered_data:np.mat)->np.
     print("用户维度降维：",dimension)
     '''
     #sklearn的截断SVD实现
-    svd = TruncatedSVD(n_components = dimension)
-    mean_centered_data_transf = svd.fit_transform(mean_centered_data) #降维后的评分矩阵
-    Sigma = svd.singular_values_
+    #svd = TruncatedSVD(n_components = dimension)
+    # mean_centered_data_transf = svd.fit_transform(mean_centered_data) #降维后的评分矩阵
+    # Sigma = svd.singular_values_
     #sklearn的随机SVD实现(近似解，相对于截断SVD速度更快)
     #截断SVD使用精确解算器ARPACK，随机SVD使用近似技术。
+    r,c = mean_centered_data.shape
+    dimension = r//10
     U,Sigma,VT = randomized_svd(mean_centered_data,n_components = dimension)
     
     '''

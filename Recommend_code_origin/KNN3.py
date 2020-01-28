@@ -149,11 +149,13 @@ def Calculate_items_similarty(origin_data:np.mat,mean_centered_data:np.mat)->np.
     print("用户维度降维：",dimension)
     '''
     #sklearn的截断SVD实现
-    svd = TruncatedSVD(n_components = dimension)
-    mean_centered_data_transf = svd.fit_transform(mean_centered_data) #降维后的评分矩阵
-    Sigma = svd.singular_values_
+    # svd = TruncatedSVD(n_components = dimension)
+    # mean_centered_data_transf = svd.fit_transform(mean_centered_data) #降维后的评分矩阵
+    # Sigma = svd.singular_values_
     #sklearn的随机SVD实现(近似解，相对于截断SVD速度更快)
     #截断SVD使用精确解算器ARPACK，随机SVD使用近似技术。
+    r,c = mean_centered_data.shape
+    dimension = r/10
     U,Sigma,VT = randomized_svd(mean_centered_data,n_components = dimension)
     
     '''
@@ -164,7 +166,7 @@ def Calculate_items_similarty(origin_data:np.mat,mean_centered_data:np.mat)->np.
     mean_centered_data_transf = mean_centered_data.T*U[:,:dimension]*Sigma_dimension.I #降维后的评分矩阵
     # print(mean_centered_data_transf)
     # print("奇异值分解，且降维后的矩阵：\n",mean_centered_data_transf.T)
-    print("nihao1")
+    # print("nihao1")
     similarity_item_matrix = Calculate_items(origin_data,mean_centered_data_transf,Cosine_similarity)#Pearson_similarity
     return similarity_item_matrix
 def ItemRecommend2(origin_data:np.mat,mean_centered_data:np.mat, metric:str,user:int,k:int,predict_num:int,recommend_reasons_num:int)->np.array:
