@@ -63,7 +63,7 @@ def Mean_centered(row_train,col_train,data_train,user_deviation,item_deviation,r
     len_data = len(data_train)
     data_train2 = copy.deepcopy(data_train)
     for i in range(len_data):
-        data_train2[i] -= (user_deviation[row_train[i]] + item_deviation[col_train[i]])
+        data_train2[i] -= (user_deviation[row[i]] + item_deviation[col[i]])
     return csr_matrix((data_train2,(row_train,col_train)),shape = (r_max+1,c_max+1))
 
 def getUp(U,user_deviation):
@@ -88,7 +88,6 @@ def getVTp(VT,item_deviation):
     VTp = np.append(VTp,item_deviation,axis = 0)
     return VTp
 
-#随机梯度下降
 def Gradient_descent(rcd_train,U,VT,alpha,landa_u,landa_i):
     m,k = U.shape
     k,n = VT.shape
@@ -121,7 +120,7 @@ def Gradient_descent(rcd_train,U,VT,alpha,landa_u,landa_i):
                 Ui[int(rcd_train[0,i]),j] = U[int(rcd_train[0,i]),j] + alpha * (e*VT[j,int(rcd_train[1,i])] - landa_u*U[int(rcd_train[0,i]),j])
                 VTi[j,int(rcd_train[1,i])] = VT[j,int(rcd_train[1,i])] + alpha * (e*U[int(rcd_train[0,i]),j]  - landa_i*VT[j,int(rcd_train[1,i])])
                 # print(j,' ',alpha * e*VT[j,int(rcd_train[1,i])],alpha * e*U[int(rcd_train[0,i]),j])
-            # e2 = (rcd_train[2][i] - sum(Ui[int(rcd_train[0,i]),:] * VTi[:,int(rcd_train[1,i])]) )
+            e2 = (rcd_train[2][i] - sum(Ui[int(rcd_train[0,i]),:] * VTi[:,int(rcd_train[1,i])]) )
             # print('e2',e2)
             # print(sum(Ui[int(rcd_train[0,i]),:] * VTi[:,int(rcd_train[1,i])]))
             for j in range(k):
@@ -142,85 +141,82 @@ def Get_RSE(Rate,X_test,y_test):
     for i in range(r):
         RSE += (y_test[i] - Rate[X_test[i,0],X_test[i,1]])**2
     return math.sqrt(RSE/r)
-def test():
-    sparse_matrix = load_npz('E:\MyProject\Recommend_code_origin\sparse_matrix_100k.npz')  #需要绝对路径
-    row,col,data =Sparse_matrix2rcd(sparse_matrix)
-    len_row = len(row)
-    row = row.reshape(len_row,1)
-    col = col.reshape(len_row,1)
-    r_max = np.max(row)
-    c_max = np.max(col)
 
-    X = np.append(row,col,axis = 1)
-    X_train,X_test,y_train,y_test = train_test_split(X,data,test_size = 0.3,random_state = 42)
-    sparse_matrix_train = csr_matrix((y_train,(X_train[:,0],X_train[:,1])),shape = (r_max+1,c_max+1))
-    user_deviation,item_deviation = Cal_deviation(sparse_matrix_train) #求用户偏差和物品偏差
-    #均值中心化
-    row_train,col_train,data_train = Sparse_matrix2rcd(sparse_matrix_train)
-    print('nihao1')
-    # print(data_train)
-    sparse_matrix_train_mean = Mean_centered(row_train,col_train,data_train,user_deviation,item_deviation,r_max,c_max)
-    # print(data_train)
-    U0,Sigma,VT = randomized_svd(sparse_matrix_train_mean,n_components = int(math.pow(len_row,0.66))//20)
-    U = U0*Sigma
-    # print('U')
-    # print(U)
-    # print('VT')
-    # print(VT)
-    # print('UVT')
-    # print(type(U))
-    # print(type(VT))
-    # print(U.shape,VT.shape)
-    # print(np.dot(U,VT))
-    # print('*'*60)
-    # print(sparse_matrix_train_mean)
-    # print(U.shape,VT.shape)
-    # print(type(U))
-    #矩阵拓展引入用户偏差和物品偏差
-    #用户偏差拓展
-    Up = getUp(U,user_deviation)
-    VTp = getVTp(VT,item_deviation)
-    print(Up)
-    print('*'*60)
-    print(VTp)
-    print(Up.shape,VTp.shape)  #(944, 101) (101, 1683)
-    #梯度下降法学习（随机）
-    # print(type(row_train))
-    rcd_train = np.array([row_train,col_train,data_train])  #rcd训练数据，未均值中心化,列表里面是数组
-    print(rcd_train)
-    rcd_train = np.array([row_train,col_train,data_train])  #rcd训练数据，未均值中心化,列表里面是数组
-    print(rcd_train)
-    # print('*'*60)
-    # print(np.dot(Up,VTp) - rcd_train)
-    S = np.dot(Up,VTp)
-    sum0 = 0.0
-    for i in range(len(rcd_train)):
-        sum0 += math.fabs(rcd_train[2,i] - S[int(rcd_train[0,i]),int(rcd_train[1,i])])
-    print(sum0)  #3.06
-    sum1 = 0.0
-    for i in range(len(y_test)):
-        sum1 += math.fabs(y_test[i] - S[int(X_test[i,0]),int(X_test[i,1])])
-    print(sum1)  #91124.5
-    # print(rcd_train[:,0])
-    # print(rcd_train.shape)
-    # print(row_train)
-    # print(col_train)
-    # print(data_train)
-    # print(type(rcd_train[0]))
-    alpha = 0.0001
-    landa_u,land_i = 0.25,0.25
-    U,VT = Gradient_descent(rcd_train,Up,VTp,alpha,landa_u,land_i)
-    Rate = np.dot(U,VT)
-    sum0 = 0
-    for i in range(len(rcd_train)):
-        sum0 += math.fabs(rcd_train[2,i] - Rate[int(rcd_train[0,i]),int(rcd_train[1,i])])
-    print(sum0)#1.69(10),1.18(20),0.38(40),0.48(100)
-    sum1 = 0.0
-    for i in range(len(y_test)):
-        sum1 += math.fabs(y_test[i] - Rate[int(X_test[i,0]),int(X_test[i,1])])
-    print(sum1)  #573188(10),51992(20),46243(40),36958(100)
-    RSE = Get_RSE(Rate,X_test,y_test)
-    print(RSE)#2.29(10)，2.13(20),1.93(40),1.57(100)
+sparse_matrix = load_npz('E:\MyProject\Recommend_code_origin\sparse_matrix_100k.npz')  #需要绝对路径
+row,col,data =Sparse_matrix2rcd(sparse_matrix)
+len_row = len(row)
+row = row.reshape(len_row,1)
+col = col.reshape(len_row,1)
+r_max = np.max(row)
+c_max = np.max(col)
 
-if __name__ == '__main__':
-    test()
+X = np.append(row,col,axis = 1)
+X_train,X_test,y_train,y_test = train_test_split(X,data,test_size = 0.3,random_state = 42)
+sparse_matrix_train = csr_matrix((y_train,(X_train[:,0],X_train[:,1])),shape = (r_max+1,c_max+1))
+user_deviation,item_deviation = Cal_deviation(sparse_matrix_train) #求用户偏差和物品偏差
+#均值中心化
+row_train,col_train,data_train = Sparse_matrix2rcd(sparse_matrix_train)
+print('nihao1')
+# print(data_train)
+sparse_matrix_train_mean = Mean_centered(row_train,col_train,data_train,user_deviation,item_deviation,r_max,c_max)
+# print(data_train)
+U0,Sigma,VT = randomized_svd(sparse_matrix_train_mean,n_components = int(math.pow(len_row,0.66))//20)
+U = U0*Sigma
+# print('U')
+# print(U)
+# print('VT')
+# print(VT)
+# print('UVT')
+# print(type(U))
+# print(type(VT))
+# print(U.shape,VT.shape)
+# print(np.dot(U,VT))
+# print('*'*60)
+# print(sparse_matrix_train_mean)
+# print(U.shape,VT.shape)
+# print(type(U))
+#矩阵拓展引入用户偏差和物品偏差
+#用户偏差拓展
+Up = getUp(U,user_deviation)
+VTp = getVTp(VT,item_deviation)
+print(Up)
+print('*'*60)
+print(VTp)
+print(Up.shape,VTp.shape)  #(944, 101) (101, 1683)
+#梯度下降法学习（随机）
+# print(type(row_train))
+rcd_train = np.array([row_train,col_train,data_train])  #rcd训练数据，未均值中心化,列表里面是数组
+print(rcd_train)
+rcd_train = np.array([row_train,col_train,data_train])  #rcd训练数据，未均值中心化,列表里面是数组
+print(rcd_train)
+# print('*'*60)
+# print(np.dot(Up,VTp) - rcd_train)
+S = np.dot(Up,VTp)
+sum0 = 0.0
+for i in range(len(rcd_train)):
+    sum0 += math.fabs(rcd_train[2,i] - S[int(rcd_train[0,i]),int(rcd_train[1,i])])
+print(sum0)  #3.06
+sum1 = 0.0
+for i in range(len(y_test)):
+    sum1 += math.fabs(y_test[i] - S[int(X_test[i,0]),int(X_test[i,1])])
+print(sum1)  #91124.5
+# print(rcd_train[:,0])
+# print(rcd_train.shape)
+# print(row_train)
+# print(col_train)
+# print(data_train)
+# print(type(rcd_train[0]))
+alpha = 0.0001
+landa_u,land_i = 0.25,0.25
+U,VT = Gradient_descent(rcd_train,Up,VTp,alpha,landa_u,land_i)
+Rate = np.dot(U,VT)
+sum0 = 0
+for i in range(len(rcd_train)):
+    sum0 += math.fabs(rcd_train[2,i] - Rate[int(rcd_train[0,i]),int(rcd_train[1,i])])
+print(sum0)#1.69(10),1.18(20),0.38(40),0.48(100)
+sum1 = 0.0
+for i in range(len(y_test)):
+    sum1 += math.fabs(y_test[i] - Rate[int(X_test[i,0]),int(X_test[i,1])])
+print(sum1)  #573188(10),51992(20),46243(40),36958(100)
+RSE = Get_RSE(Rate,X_test,y_test)
+print(RSE)#2.29(10)，2.13(20),1.93(40),1.57(100)
