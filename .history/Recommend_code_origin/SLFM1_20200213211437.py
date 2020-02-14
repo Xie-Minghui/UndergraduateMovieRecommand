@@ -7,6 +7,7 @@ import math
 import random
 import copy
 
+
 def Sparse_matrix2rcd(sparse_matrix)->np.array:
     #将稀疏矩阵转化为普通形式，方便分离训练集与测试集，因为目前还没有找到直接对稀疏矩阵分离的方法
     indptr = sparse_matrix.indptr
@@ -31,7 +32,7 @@ def Sparse_matrix2rcd(sparse_matrix)->np.array:
 
 
 def Cal_deviation(sparse_matrix_train):
-    #利用稀疏矩阵求用户偏差和物品偏差，使用均值代替
+    #利用稀疏矩阵求用户偏差和物品偏差，使用均值作为用户偏差和物品偏差的初始值
     sum_row = sparse_matrix_train.sum(axis=1) #求每行的和，返回np矩阵 2000*1
     sum_col = sparse_matrix_train.sum(axis=0) #求每列的和，返回np矩阵 1*2000
 
@@ -63,7 +64,7 @@ def Mean_centered(row_train,col_train,data_train,user_deviation,item_deviation,r
     len_data = len(data_train)
     data_train2 = copy.deepcopy(data_train)
     for i in range(len_data):
-        data_train2[i] -= (user_deviation[row_train[i]] + item_deviation[col_train[i]])
+        data_train2[i] -= (user_deviation[row[i]] + item_deviation[col[i]])
     return csr_matrix((data_train2,(row_train,col_train)),shape = (r_max+1,c_max+1))
 
 def getUp(U,user_deviation):

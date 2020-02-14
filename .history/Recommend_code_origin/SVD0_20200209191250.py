@@ -63,7 +63,7 @@ def Mean_centered(row_train,col_train,data_train,user_deviation,item_deviation,r
     len_data = len(data_train)
     data_train2 = copy.deepcopy(data_train)
     for i in range(len_data):
-        data_train2[i] -= (user_deviation[row_train[i]] + item_deviation[col_train[i]])
+        data_train2[i] -= (user_deviation[row[i]] + item_deviation[col[i]])
     return csr_matrix((data_train2,(row_train,col_train)),shape = (r_max+1,c_max+1))
 
 def getUp(U,user_deviation):
@@ -121,7 +121,7 @@ def Gradient_descent(rcd_train,U,VT,alpha,landa_u,landa_i):
                 Ui[int(rcd_train[0,i]),j] = U[int(rcd_train[0,i]),j] + alpha * (e*VT[j,int(rcd_train[1,i])] - landa_u*U[int(rcd_train[0,i]),j])
                 VTi[j,int(rcd_train[1,i])] = VT[j,int(rcd_train[1,i])] + alpha * (e*U[int(rcd_train[0,i]),j]  - landa_i*VT[j,int(rcd_train[1,i])])
                 # print(j,' ',alpha * e*VT[j,int(rcd_train[1,i])],alpha * e*U[int(rcd_train[0,i]),j])
-            # e2 = (rcd_train[2][i] - sum(Ui[int(rcd_train[0,i]),:] * VTi[:,int(rcd_train[1,i])]) )
+            e2 = (rcd_train[2][i] - sum(Ui[int(rcd_train[0,i]),:] * VTi[:,int(rcd_train[1,i])]) )
             # print('e2',e2)
             # print(sum(Ui[int(rcd_train[0,i]),:] * VTi[:,int(rcd_train[1,i])]))
             for j in range(k):

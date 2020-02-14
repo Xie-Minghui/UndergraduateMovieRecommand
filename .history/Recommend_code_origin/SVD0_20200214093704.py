@@ -63,7 +63,7 @@ def Mean_centered(row_train,col_train,data_train,user_deviation,item_deviation,r
     len_data = len(data_train)
     data_train2 = copy.deepcopy(data_train)
     for i in range(len_data):
-        data_train2[i] -= (user_deviation[row_train[i]] + item_deviation[col_train[i]])
+        data_train2[i] -= (user_deviation[row_train[i]] + item_deviation[col[i]])
     return csr_matrix((data_train2,(row_train,col_train)),shape = (r_max+1,c_max+1))
 
 def getUp(U,user_deviation):
