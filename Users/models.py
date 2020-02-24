@@ -37,7 +37,7 @@ class User(BaseModel):
     prefer_actors = models.CharField(max_length=300,default="[]",verbose_name='偏爱演员')#偏爱演员表的id
     prefer_directors = models.CharField(max_length=300,default="[]",verbose_name='偏爱的导演')#偏爱导演表的id
 
-    recommend_movies = models.CharField(max_length=300,default="[]",verbose_name='推荐的电影列表')#推荐的电影列表的id
+    #recommend_movies = models.CharField(max_length=300,default="[]",verbose_name='推荐的电影列表')#推荐的电影列表的id
 
     objects = UsersManager()#用户管理类
 

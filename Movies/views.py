@@ -51,10 +51,25 @@ def return_movie_json(request, movie_id):
     movie = Movie.objects.get(movie_id=movie_id)
 
     result = {
-        "data": {},
-        "message": {},
-        "剧情简介": "",
-        "评分": "",
-        "评价人数": ""
+        "data": {
+            "id": movie_id,
+            "title": movie.movie_name,
+            "year": str(movie.movie_releaseTime)[:4],
+            "img": "/image/" + str(movie.movie_cover)
+        },
+        "message": {
+            "导演": "",
+            "编剧": "",
+            "主演": "",
+            "类型": "",
+            "制片国家/地区": movie.movie_origin,
+            "语言": movie.movie_language,
+            "上映日期": movie.movie_releaseTime,
+            "片长": str(movie.movie_length)+"分钟",
+            "又名": movie.movie_alias
+        },
+        "剧情简介": movie.movie_intro,
+        "评分": movie.movie_grades,
+        "评价人数": str(movie.movie_ratingNum)+"人评价"
     }
     return HttpResponse(json.dumps(result,ensure_ascii=False), content_type="application/json", charset='utf-8')
