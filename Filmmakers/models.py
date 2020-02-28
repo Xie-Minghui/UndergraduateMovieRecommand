@@ -7,5 +7,9 @@ class Celebrity(BaseModel):#明星信息表
     celebrity_id = models.AutoField(primary_key = True, verbose_name = "明星id")
     celebrity_name = models.CharField(max_length = 20, unique = True, verbose_name = "明星名字")
     celebrity_gender = models.CharField(max_length=10,choices=genderType,default="男", verbose_name='明星性别',null=True)
-    celebrity_birthyear = models.CharField(max_length=4,verbose_name='出生日期',null=True)
-    celebrity_intro = models.TextField(max_length=500,verbose_name='明星简介',null=True)
+    celebrity_cover = models.ImageField(upload_to='CelebrityCover/%Y%m%d', null=True, verbose_name='明星封面图片路径')
+    # celebrity_birthyear = models.CharField(max_length=4,verbose_name='出生日期',null=True)
+    # celebrity_intro = models.TextField(max_length=500,verbose_name='明星简介',null=True)
+
+    def __str__(self):
+        return self.celebrity_name
