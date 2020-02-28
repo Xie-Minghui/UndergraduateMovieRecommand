@@ -176,14 +176,12 @@ class LFM:
         sparse_matrix_train_mean = self.Mean_centered(row_train,col_train,data_train,user_deviation,item_deviation,self.r_max,self.c_max)
         # print(data_train)
         #int(math.pow(len_row,0.66))//20
-        if self.Up is None:
-            U0,Sigma,VT = randomized_svd(sparse_matrix_train_mean,n_components = self.lfm_num)
-            U = U0*Sigma
-            #矩阵拓展引入用户偏差和物品偏差
-            #用户偏差拓展
-            self.Up = self.getUp(U,user_deviation)
-            self.VTp = self.getVTp(VT,item_deviation)
-            print("第一次训练！")
+        U0,Sigma,VT = randomized_svd(sparse_matrix_train_mean,n_components = self.lfm_num)
+        U = U0*Sigma
+        #矩阵拓展引入用户偏差和物品偏差
+        #用户偏差拓展
+        self.Up = self.getUp(U,user_deviation)
+        self.VTp = self.getVTp(VT,item_deviation)
         # print(Up)
         # print('*'*60)
         # print(VTp)

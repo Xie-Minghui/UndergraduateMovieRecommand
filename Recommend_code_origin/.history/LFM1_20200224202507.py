@@ -107,13 +107,13 @@ class LFM:
         k,n = self.VTp.shape
         Ui,VTi = np.zeros((m,k)),np.zeros((k,n))
         c = rcd_train[0].shape[0]
-        print("训练矩阵的大小：",m,n)
+        print(m,k,n)
         # print(rcd_train[:][0])
         # while():
         # print('hi',c)
         shuffle_list = [i for i in range(c)]
         # print(shuffle_list)
-        for l in range(train_times):
+        for l in range(100):
             print(l)
             random.shuffle(shuffle_list)
             # rcd_train = rcd_train[:,shuffle_list]
@@ -171,19 +171,17 @@ class LFM:
         user_deviation,item_deviation = self.Cal_deviation(sparse_matrix_train) #求用户偏差和物品偏差
         #均值中心化
         row_train,col_train,data_train = self.Sparse_matrix2rcd(sparse_matrix_train)
-        # print('nihao1')
+        print('nihao1')
         # print(data_train)
         sparse_matrix_train_mean = self.Mean_centered(row_train,col_train,data_train,user_deviation,item_deviation,self.r_max,self.c_max)
         # print(data_train)
         #int(math.pow(len_row,0.66))//20
-        if self.Up is None:
-            U0,Sigma,VT = randomized_svd(sparse_matrix_train_mean,n_components = self.lfm_num)
-            U = U0*Sigma
-            #矩阵拓展引入用户偏差和物品偏差
-            #用户偏差拓展
-            self.Up = self.getUp(U,user_deviation)
-            self.VTp = self.getVTp(VT,item_deviation)
-            print("第一次训练！")
+        U0,Sigma,VT = randomized_svd(sparse_matrix_train_mean,n_components = self.lfm_num)
+        U = U0*Sigma
+        #矩阵拓展引入用户偏差和物品偏差
+        #用户偏差拓展
+        self.Up = self.getUp(U,user_deviation)
+        self.VTp = self.getVTp(VT,item_deviation)
         # print(Up)
         # print('*'*60)
         # print(VTp)
@@ -198,7 +196,7 @@ class LFM:
         sum0 = 0.0
         for i in range(len(rcd_train)):
             sum0 += math.fabs(rcd_train[2,i] - S[int(rcd_train[0,i]),int(rcd_train[1,i])])
-        print("训练前的在训练集上的总评分误差： {0}".format(sum0))  #3.06
+        print(sum0)  #3.06
 
         self.Gradient_descent(rcd_train,train_times)
 
@@ -229,9 +227,9 @@ class LFM:
         sum1 = 0.0
         for i in range(len(y_test)):
             sum1 += math.fabs(y_test[i] - Rate[int(X_test[i,0]),int(X_test[i,1])])
-        print("在测试集上的总分误差：{0}s".format(sum1))  #573188(10),51992(20),46243(40),36958(100)
+        print(sum1)  #573188(10),51992(20),46243(40),36958(100)
         RSE = self.Get_RSE(Rate,X_test,y_test)
-        print("测试集上的回归误差：{0}".format(RSE))#2.29(10)，2.13(20),1.93(40),1.57(100)
+        print(RSE)#2.29(10)，2.13(20),1.93(40),1.57(100)
     def Recommend(self,user,item_num):
         user_rating = np.dot(self.Up[user],self.VTp)
         #计算出每个用户的评分，然后筛选出该用户没有评分的物品，找出k高的评分，将相应的电影推荐出去
@@ -243,14 +241,10 @@ def test():
     lfm = LFM(90)
     try:
         with open('lfm0.pkl','rb') as f:
-            lfm = pickle.loads(f.read())
+            lfm = pickle.load(f.read())
     except IOError:
         print("File not exist!")
-    print("训练前隐向量：")
-    print(lfm.Up)
-    print('*'*50)
-    print(lfm.VTp)
-    print('*'*50)
+    # print('nihao')
     npz_path = r'E:\MyProject\Recommend_code_origin\sparse_matrix_100k.npz'
     X_train,X_test,y_train,y_test = lfm.Fit(npz_path)
     lfm.Train(X_train,y_train, alpha = 0.0001,lambda_u = 0.25,lambda_i = 0.25,train_times = 10)
