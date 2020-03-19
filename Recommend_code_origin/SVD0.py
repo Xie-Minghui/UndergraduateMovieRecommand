@@ -142,6 +142,12 @@ def Get_RSE(Rate,X_test,y_test):
     for i in range(r):
         RSE += (y_test[i] - Rate[X_test[i,0],X_test[i,1]])**2
     return math.sqrt(RSE/r)
+def getMAE(Rate,X_test,y_test):
+    r,c = X_test.shape
+    MAE = 0.0
+    for i in range(r):
+        MAE += math.fabs(y_test[i] - Rate[X_test[i,0],X_test[i,1]])
+    return MAE/r
 def test():
     sparse_matrix = load_npz('E:\MyProject\Recommend_code_origin\sparse_matrix_100k.npz')  #需要绝对路径
     row,col,data =Sparse_matrix2rcd(sparse_matrix)
@@ -221,6 +227,8 @@ def test():
     print(sum1)  #573188(10),51992(20),46243(40),36958(100)
     RSE = Get_RSE(Rate,X_test,y_test)
     print(RSE)#2.29(10)，2.13(20),1.93(40),1.57(100)
+    MAE = getMAE(Rate,X_test,y_test)
+    print(MAE)
 
 if __name__ == '__main__':
     test()
