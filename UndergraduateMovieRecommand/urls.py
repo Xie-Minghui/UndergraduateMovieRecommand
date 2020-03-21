@@ -19,10 +19,11 @@ from Movies import views as M_v
 
 
 urlpatterns = [
-    path('control/', admin.site.urls),#修改默认后台入口路径为control/
+    path('control/', admin.site.urls),  # 修改默认后台入口路径为control/
     path('movies/',include('Movies.urls')),
-    path('api/home_movies.json',M_v.return_home_movies),
-    path('api/moive/<int:movie_id>',M_v.return_movie_json),
-    #path('manifest.json',M_v.indexData),
+    # path('api/home_movies.json',M_v.return_home_movies),
+    path('api/getMovies/',M_v.get_movies),
+    # path('api/getRecommendMovies'),
+    path('api/getMovieDetail/<int:movie_id>',M_v.return_movie_json),
 
 ]
