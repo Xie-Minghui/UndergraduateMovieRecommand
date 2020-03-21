@@ -9,7 +9,6 @@ import copy
 import pickle
 import os
 
-
 class LFM:
     def __init__(self,lfm_num = 0):
         self.lfm_num = lfm_num  #隐向量的个数
@@ -22,7 +21,11 @@ class LFM:
         self.c_max = None #列号最大值
 
     def Sparse_matrix2rcd(self,sparse_matrix)->np.array:
-        #将稀疏矩阵转化为普通形式，方便分离训练集与测试集，因为目前还没有找到直接对稀疏矩阵分离的方法
+        """
+            输入：稀疏矩阵
+            输出：rcd存储形式（行号，列号，值）
+            功能：将稀疏矩阵转化为普通形式，方便分离训练集与测试集，因为目前还没有找到直接对稀疏矩阵分离的方法
+        """
         indptr = sparse_matrix.indptr
         indices = sparse_matrix.indices
         data = sparse_matrix.data
@@ -172,7 +175,7 @@ class LFM:
 
         sparse_matrix_train = csr_matrix((y_train,(X_train[:,0],X_train[:,1])),shape = (self.r_max+1,self.c_max+1))
         user_deviation,item_deviation = self.Cal_deviation(sparse_matrix_train) #求用户偏差和物品偏差
-        
+
         row_train,col_train,data_train = self.Sparse_matrix2rcd(sparse_matrix_train)
         #均值中心化
         sparse_matrix_train_mean = self.Mean_centered(row_train,col_train,data_train,user_deviation,item_deviation,self.r_max,self.c_max)
@@ -265,6 +268,7 @@ class LFM:
         #--------------------------------------
         recommend_items_loc = np.argpartition(-user_rating_rest,item_num*random_times)
         # print(recommend_items_loc.shape)
+        #recommend_items_loc经过multiply得到的还是向量,经过函数argpartition的位置还是向量，不同于下一个函数cosineSimilarity_loc的ndarray
         random.shuffle(recommend_items_loc[0:item_num*random_times])
         recommend_items = recommend_items_loc[0:item_num]
         recommend_items = np.array([x+1 for x in recommend_items])
@@ -287,7 +291,8 @@ class LFM:
         cosineSimilarity = np.array(cosineSimilarity)
         random_times = 4  #随机因子 
         cosineSimilarity_loc = np.argpartition(-cosineSimilarity,item_num*random_times)  #(1,1683)
-        random.shuffle(cosineSimilarity_loc[0:item_num*random_times]) #原地改变，返回NoneType
+        #shuffle函数对array有用，对列表似乎无效
+        random.shuffle(cosineSimilarity_loc[0,0:item_num*random_times]) #原地改变，返回NoneType
         similarity_items = cosineSimilarity_loc[0,0:item_num]
         similarity_items = np.array([x+1 for x in similarity_items])
         return similarity_items
@@ -296,29 +301,35 @@ class LFM:
 
     
 def test():
-    lfm = LFM(lfm_num = 20)
+    lfm = LFM(lfm_num = 20)  #lfm_num 设置模型隐向量的维度
+
+    #如果之前训练的模型已经存在，则直接读取文件，恢复模型
     try:
         with open('lfm0.pkl','rb') as f:
             lfm = pickle.loads(f.read())
     except IOError:
         print("File not exist!")
-    # print("训练前隐向量：")
-    # print(lfm.Up)
-    # print('*'*50)
-    # print(lfm.VTp)
-    # print('*'*50)
+    
+    #给出scipy稀疏矩阵的存储文件的路径，传入路径返回训练和测试数据集
     npz_path = r'E:\MyProject\Recommend_code_origin\sparse_matrix_100k.npz'
     X_train,X_test,y_train,y_test = lfm.Fit(npz_path)
-    
-    lfm.Train(X_train,y_train, alpha = 0.001,lambda_u = 0.05,lambda_i = 0.1,train_times = 10)
 
+    #模型的训练    
+    lfm.Train(X_train,y_train, alpha = 0.001,lambda_u = 0.2,lambda_i = 0.2,train_times = 10)
+
+    #模型的测试
     lfm.lfm_test(X_test,y_test)
+    #将训练号的模型存储下来
     output_file = open('lfm0.pkl','wb')
     lfm_str = pickle.dumps(lfm)
     output_file.write(lfm_str)
     output_file.close()
+
+    #读出稀疏矩阵，用户推荐
     sparse_matrix = load_npz(npz_path)
+    #给用户234推荐5个电影
     print(lfm.RecommendtoUser(234,5,sparse_matrix))
+    #推荐与206相似的6个电影
     print(lfm.Recommend_similary_items(206,6))
 
 if __name__ == '__main__':
