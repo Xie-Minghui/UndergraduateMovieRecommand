@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'Recommend',
     'Unclassed',
     'Users',
+    'Rating',
 ]
 
 MIDDLEWARE = [
