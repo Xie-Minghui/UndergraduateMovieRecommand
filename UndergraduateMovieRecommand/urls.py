@@ -16,6 +16,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path,include
 from Movies import views as M_v
+from Users import views as U_v
 
 
 urlpatterns = [
@@ -25,5 +26,5 @@ urlpatterns = [
     path('api/getMovies/',M_v.get_movies),
     # path('api/getRecommendMovies'),
     path('api/getMovieDetail/<int:movie_id>',M_v.return_movie_json),
-
+    path('api/login/',U_v.login),
 ]

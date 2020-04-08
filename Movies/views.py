@@ -9,23 +9,6 @@ import json
 
 
 def return_home_movies(request):
-    #print('======')
-    # result = {"success": True,
-    #           "data":{
-    #               "movies":[
-    #                   {"id": 1,
-    #                    "title": "铤而走险",
-    #                    #"img": "https://img1.doubanio.com/view/photo/s_ratio_poster/public/p2566515717.webp",
-    #                    "img": "/upload/MovieCover/2020/01/31/p2557573348.webp",
-    #                    "url": "/movie/1"
-    #                    },
-    #                   {"id": 2,
-    #                    "title":"美丽人生",
-    #                    "img": "https://img3.doubanio.com/view/photo/s_ratio_poster/public/p2578474613.webp",
-    #                    "url": "movie/2"
-    #                   }
-    #               ]}}
-
     #按照上映时间抽取最新条目
     movie_objects = Movie.objects.all().order_by('-movie_releaseTime')[:2]
     id_num = 1
@@ -89,8 +72,9 @@ def return_movie_json(request, movie_id):
         # "id": movie_id,
         "title": movie.movie_name,
         "name": movie.movie_name,
-        "poster": "/image/" + str(movie.movie_cover),
-        "showtime": movie.movie_releaseTime.strftime('%Y-%m-%d'),
+        # "poster": "/image/" + str(movie.movie_cover),
+        "poster": movie.movie_cover,
+        "showtime": movie.movie_releaseTime,  # movie.movie_releaseTime.strftime('%Y-%m-%d')
         "showpos": movie.movie_showPos,
         "length": movie.movie_length,
         "type": types,
@@ -117,8 +101,9 @@ def get_movies(request):
                 "score": "9.3",
                 "date": "2019",
                 "type": "剧情,动画,奇幻",
-                "img": "/image/MovieCover/20200131/p2557573348.webp",
-                "url": "../detail/1"
+                # "img": "/image/MovieCover/20200131/p2557573348.webp",
+                "img": "https://img1.doubanio.com/view/photo/s_ratio_poster/public/p2557573348.webp",
+                "url": "../detail/1291561"
             }
         ]
     }

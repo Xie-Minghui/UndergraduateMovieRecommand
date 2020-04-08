@@ -3,7 +3,7 @@ from baseModel.BaseModel import BaseModel
 # Create your models here.
 
 
-class Comments(BaseModel):
+class Comments(models.Model):
     comment_id = models.AutoField(primary_key=True)     #主键自增长
     user = models.ForeignKey('Users.User', on_delete=models.CASCADE)#外键约束
     movie = models.ForeignKey('Movies.Movie', on_delete=models.CASCADE)

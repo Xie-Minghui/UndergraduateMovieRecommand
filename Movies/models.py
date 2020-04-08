@@ -1,24 +1,26 @@
 from django.db import models
-from baseModel.BaseModel import BaseModel
+# from baseModel.BaseModel import BaseModel
 # Create your models here.
 
-class Movie(BaseModel):
-    movie_id = models.AutoField(primary_key = True, verbose_name = "电影id")
-    movie_name = models.CharField(max_length = 100, unique = True, verbose_name = "电影片名")
-    movie_length = models.IntegerField(default = 0, verbose_name = "电影片长")
-    movie_releaseTime = models.DateField(verbose_name = "上映时间")
-    movie_showPos = models.CharField(max_length=10,default='中国大陆',verbose_name="上映地区")
-    movie_intro = models.CharField(max_length=512,null=True, verbose_name='剧情简介')
-    movie_cover = models.ImageField(upload_to='MovieCover/%Y%m%d',null=True, verbose_name='电影封面图片路径')
+class Movie(models.Model):
+    movie_id = models.IntegerField(primary_key=True, verbose_name="电影id")
+    douban_id = models.IntegerField(null=True, blank=True, verbose_name="豆瓣id")
+    movie_name = models.CharField(max_length=100, verbose_name="电影片名")
+    movie_length = models.IntegerField(null=True, blank=True, default=0, verbose_name="电影片长")
+    movie_releaseTime = models.CharField(max_length=12, verbose_name="上映时间")
+    movie_showPos = models.CharField(max_length=10, null=True, blank=True, verbose_name="上映地区")
+    movie_intro = models.TextField(max_length=1024, null=True, blank=True, verbose_name='剧情简介')
+    # movie_cover = models.ImageField(upload_to='MovieCover/%Y%m%d',null=True,blank=True, verbose_name='电影封面图片路径')
+    movie_cover = models.CharField(max_length=150, null=True, blank=True, verbose_name='电影封面图片路径')
     # 封面的字段类型可考虑使用models.ProcessedImageField来进行处理https://blog.csdn.net/weixin_34314962/article/details/88618031
-    movie_grades = models.FloatField(default = 0.0,verbose_name = '豆瓣评分')
+    movie_grades = models.FloatField(default=0.0, null=True, blank=True, verbose_name = '豆瓣评分')
     # movie_ratingNum = models.IntegerField(default=0,verbose_name='评价人数')
     # movie_origin = models.CharField(max_length=10,default='中国大陆',verbose_name='制片国家/地区')
     # movie_language = models.CharField(max_length=50,default='汉语普通话 / 英语',verbose_name='语言')
-    movie_alias = models.CharField(max_length=100,null=True,verbose_name='电影别名')
+    movie_alias = models.CharField(max_length=100,verbose_name='电影别名')
 
-    types = models.ManyToManyField(to='MovieType')  # 电影-类别 多对多关系表
-    lab = models.ManyToManyField(to='MovieLab')  # 电影-标签 多对多关系表
+    types = models.ManyToManyField(to='MovieType',blank=True)  # 电影-类别 多对多关系表
+    lab = models.ManyToManyField(to='MovieLab',blank=True)  # 电影-标签 多对多关系表
     roles = models.ManyToManyField('Filmmakers.Celebrity', through='RoleTable')  # 电影的导演及演员表
 
     def __str__(self):
