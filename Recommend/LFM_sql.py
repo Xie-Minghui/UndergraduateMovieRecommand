@@ -298,7 +298,7 @@ class LFM:
         recommend_list = []
         for item in X_test:
             topkItems = self.RecommendtoUser(item[0],predict_num,sparse_matrix)
-            recommend_list = recommend_list + tokItems
+            recommend_list = recommend_list + topkItems
         
         coverage = len(set(recommend_list)) / self.itemMax  #推荐物品的覆盖率
         times = {}
@@ -327,7 +327,7 @@ class LFM:
         print("在测试集上的总分误差：{0}s".format(sum1))
         RMSE, MAE = self.Get_RMSEandMAE(Rate, X_test, y_test)
         # 2.29(10)，2.13(20),1.93(40),1.57(100)
-        print("测试集上的回归误差RSE：{0}".format(RSE))
+        print("测试集上的回归误差RSE：{0}".format(RMSE))
         # MAE = self.getMAE(Rate,X_test,y_test)
         print("测试集上的MAE：{0}".format(MAE))
 
@@ -341,69 +341,10 @@ def ReadMysql(host,username,password,database):
         userID.append(item[0])
         movieID.append(item[1])
         rating.append(item[2])
-    # print(userID[0:10])
-    # print(movieID[0:10])
-    # print(rating[0:10])
-    return csr_matrix((np.array(rating),(np.array(userID), np.array(movieID))), shape=(1000,2000))#shape = (6500,4500))
+
+    return csr_matrix( (np.array(rating),( np.array(userID), np.array(movieID) ) ), shape=(6500,4500) )#shape = (6500,4500))
 
 
-# global _lfm
-# _lfm = LFM(lfm_num=10)  # lfm_num 设置模型隐向量的维度
-# global _sparse_matrix
-
-# def init():
-#     # self._lfm
-#     # self._sparse_matrix
-#     # self.flush()
-#     # global _lfm
-#     # global _sparse_matrix
-#     try:
-#         with open(r'E:/MyProject_test/Recommend_code_origin/lfm_sql.pkl', 'rb') as f:
-#             _lfm = pickle.loads(f.read())
-#             print("global var读取成功")
-#     except IOError:
-#         print("File not exist! 尼玛")
-
-#     host = "localhost"
-#     username = "root"
-#     password = "112803"
-#     database = "mrtest"
-#     _sparse_matrix = ReadMysql(host, username, password, database)
-
-
-# init()
-# def flush():
-#     # _lfm = LFM(lfm_num=10)  # lfm_num 设置模型隐向量的维度
-#     #如果之前训练的模型已经存在，则直接读取文件，恢复模型
-#     print(os.path.abspath(__file__))
-#     print("nooo")
-#     try:
-#         with open(r'./lfm_sql.pkl','rb') as f:
-#             _lfm = pickle.loads(f.read())
-#             print("global var读取成功")
-#     except IOError:
-#         print("File not exist!")
-    
-#     host = "localhost"
-#     username = "root"
-#     password = "112803"
-#     database = "mrtest"
-#     _sparse_matrix = ReadMysql(host, username, password, database)
-# def get_value():
-#     return _lfm, _sparse_matrix
-# def get_flushval():
-#     flush()
-#     return _lfm, _sparse_matrix
-# global lfm
-
-
-#给出scipy稀疏矩阵的存储文件的路径，传入路径返回训练和测试数据集
-# npz_path = r'E:\MyProject\Recommend_code_origin\sparse_matrix_100k.npz'
-# host = "localhost"
-# username = "root"
-# password = "112803"
-# sparse_matrix = ReadMysql(host,username,password,database)
-# globalvalue = globalvar()
     
 def test():
     

@@ -2,7 +2,7 @@
 """Django's command-line utility for administrative tasks."""
 import os
 import sys
-
+from Recommend.LFM_sql import LFM
 
 def main():
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'UndergraduateMovieRecommand.settings')

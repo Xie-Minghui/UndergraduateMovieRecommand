@@ -4,7 +4,8 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from Users.models import User
-
+from Recommend.LFM_sql import LFM, ReadMysql
+from Recommend.LFM_test import lfm, sparse_matrix
 
 @csrf_exempt
 def login(request):
@@ -28,3 +29,18 @@ def login(request):
             response['result'] = 'false'
             print('用户未找到')
         return response
+
+
+Configuration = {
+    'host': "localhost",
+    'username': "root",
+    'password': "112803",
+    'database': "mrtest"
+}
+
+
+def getRecommendMovies(request, userID):
+
+    RecommendMovies = lfm.RecommendtoUser(userID, 4, sparse_matrix)
+    # print(RecommendMovies)
+    return HttpResponse(RecommendMovies)

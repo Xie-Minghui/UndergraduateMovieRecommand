@@ -1,6 +1,6 @@
 
 import pickle
-from Recommend_code_origin.LFM_sql import LFM, ReadMysql
+from Recommend.LFM_sql import LFM, ReadMysql
 Configuration = {
     'host': "localhost",
     'username': "root",
@@ -9,7 +9,7 @@ Configuration = {
 }
 lfm = LFM(lfm_num=10)  # lfm_num 设置模型隐向量的维度
 try:
-    with open(r'E:\MyProject_test\Recommend_code_origin\lfm_sql.pkl', 'rb') as f:
+    with open(r'./lfm_sql.pkl', 'rb') as f:  # E:\MR\UndergraduateMovieRecommand\Recommend
         lfm = pickle.loads(f.read())
 except IOError:
     print("File not exist!")

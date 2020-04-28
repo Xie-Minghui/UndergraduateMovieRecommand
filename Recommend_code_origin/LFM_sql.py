@@ -344,7 +344,7 @@ def ReadMysql(host,username,password,database):
     # print(userID[0:10])
     # print(movieID[0:10])
     # print(rating[0:10])
-    return csr_matrix((np.array(rating),(np.array(userID), np.array(movieID))), shape=(1000,2000))#shape = (6500,4500))
+    return csr_matrix((np.array(rating),(np.array(userID), np.array(movieID))), shape=(6500,4500))#shape = (6500,4500))
 
 
 # global _lfm
