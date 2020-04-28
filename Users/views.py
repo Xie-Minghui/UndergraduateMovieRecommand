@@ -6,6 +6,8 @@ from django.views.decorators.csrf import csrf_exempt
 from Users.models import User
 from Recommend.LFM_sql import LFM, ReadMysql
 from Recommend.LFM_test import lfm, sparse_matrix
+from Recommend.KNN_test import knn, origin_data
+from Recommend.KNN41 import KNN
 
 @csrf_exempt
 def login(request):
@@ -31,16 +33,24 @@ def login(request):
         return response
 
 
-Configuration = {
-    'host': "localhost",
-    'username': "root",
-    'password': "112803",
-    'database': "mrtest"
-}
+# Configuration = {
+#     'host': "localhost",
+#     'username': "root",
+#     'password': "112803",
+#     'database': "mrtest"
+# }
 
 
 def getRecommendMovies(request, userID):
 
+    predict_num = 4
     RecommendMovies = lfm.RecommendtoUser(userID, 4, sparse_matrix)
+    top_k_item, top_k_score, recommend_reasons_items = knn.ItemRecommend(
+        origin_data, userID, 4, predict_num)
     # print(RecommendMovies)
-    return HttpResponse(RecommendMovies)
+    FinalRecommend = list(top_k_item) + RecommendMovies
+    print(RecommendMovies)
+    print(top_k_item)
+    print(top_k_score)
+    return HttpResponse(FinalRecommend)
+    # return HttpResponse(RecommendMovies)

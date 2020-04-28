@@ -9,7 +9,7 @@ Configuration = {
 }
 lfm = LFM(lfm_num=10)  # lfm_num 设置模型隐向量的维度
 try:
-    with open(r'E:\MyProject_test\Recommend_code_origin\lfm_sql.pkl', 'rb') as f:  # E:\MyProject_test\Recommend_code_origin\
+    with open(r'E:\MR\UndergraduateMovieRecommand\Recommend\lfm_sql.pkl', 'rb') as f:
         lfm = pickle.loads(f.read())
 except IOError:
     print("File not exist!")

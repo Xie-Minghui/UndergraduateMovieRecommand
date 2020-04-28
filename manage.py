@@ -3,6 +3,7 @@
 import os
 import sys
 from Recommend.LFM_sql import LFM
+from Recommend.KNN41 import KNN
 
 def main():
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'UndergraduateMovieRecommand.settings')
