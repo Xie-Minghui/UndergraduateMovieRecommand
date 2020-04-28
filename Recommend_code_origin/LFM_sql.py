@@ -9,7 +9,7 @@ import copy
 import pickle
 import os
 import pymysql
-
+import time
 class LFM:
     def __init__(self,lfm_num = 0):
         self.lfm_num = lfm_num  #隐向量的个数
@@ -334,6 +334,7 @@ def ReadMysql(host,username,password,database):
 
     
 def test():
+    start = time.clock()
     lfm = LFM(lfm_num = 10)  #lfm_num 设置模型隐向量的维度
 
     #如果之前训练的模型已经存在，则直接读取文件，恢复模型
@@ -353,7 +354,7 @@ def test():
     X_train,X_test,y_train,y_test = lfm.Fit(sparse_matrix)
 
     #模型的训练    
-    lfm.Train(X_train,y_train, alpha = 0.005,lambda_u = 0.1,lambda_i = 0.12,train_times = 30)
+    lfm.Train(X_train,y_train, alpha = 0.005,lambda_u = 0.1,lambda_i = 0.12,train_times = 10)
     #1m: 0.001 0.2 0.2 10
     #100k: 0.07 0.1 0.12 100  
     #模型的测试
@@ -370,6 +371,9 @@ def test():
     #print(lfm.RecommendtoUser(234,5,sparse_matrix))
     #推荐与206相似的6个电影
     #print(lfm.Recommend_similary_items(206,6))
+    end = time.clock()
+
+    print(end - start)
 
 if __name__ == '__main__':
     test()
