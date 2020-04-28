@@ -9,7 +9,8 @@ import copy
 import pickle
 import os
 import pymysql
-import time
+import operator
+
 class LFM:
     def __init__(self,lfm_num = 0):
         self.lfm_num = lfm_num  #隐向量的个数
@@ -217,49 +218,23 @@ class LFM:
         self.Gradient_descent(rcd_train,train_times)
 
     
-    def Get_RSE(self,Rate,X_test,y_test):
+    def Get_RMSEandMAE(self,Rate,X_test,y_test):
         """
             参数：：评分矩阵，测试集
             得到在测试集上的RMSE
         """
         r,c = X_test.shape
-        RSE = 0.0
+        RMSE = 0.0
+        MAE = 0.0
         for i in range(r):
             if Rate[X_test[i,0],X_test[i,1]] > 5:
                 Rate[X_test[i,0],X_test[i,1]] = 5.0
             if Rate[X_test[i,0],X_test[i,1]] <= 0:
                 Rate[X_test[i,0],X_test[i,1]] = 0.0
-            RSE += (y_test[i] - Rate[X_test[i,0],X_test[i,1]])**2
-        return math.sqrt(RSE/r)
+            RMSE += (y_test[i] - Rate[X_test[i,0],X_test[i,1]])**2
+            MAE += math.sqrt(y_test[i] - Rate[X_test[i,0],X_test[i,1]])
+        return math.sqrt(RMSE/r),MAE/r
     
-    def getMAE(self,Rate,X_test,y_test):
-        """
-            参数：：评分矩阵，测试集
-            得到在测试集上的MAE。
-        """
-        r,c = X_test.shape
-        MAE = 0.0
-        for i in range(r):
-            MAE += math.fabs(y_test[i] - Rate[X_test[i,0],X_test[i,1]])
-        return MAE/r
-        
-    
-    #训练之后的测试集的总误差
-    def lfm_test(self,X_test,y_test): 
-        # print("最后的训练结果：") 
-        # print(self.Up)
-        # print(self.VTp)
-        Rate = np.dot(self.Up,self.VTp)
-        sum1 = 0.0
-        for i in range(len(y_test)):
-            # if i < 10:
-            #     print( Rate[int(X_test[i,0]),int(X_test[i,1])]) #-------------------------------
-            sum1 += math.fabs(y_test[i] - Rate[int(X_test[i,0]),int(X_test[i,1])])
-        print("在测试集上的总分误差：{0}s".format(sum1))  #573188(10),51992(20),46243(40),36958(100)
-        RSE = self.Get_RSE(Rate,X_test,y_test)
-        print("测试集上的回归误差RSE：{0}".format(RSE))#2.29(10)，2.13(20),1.93(40),1.57(100)
-        MAE = self.getMAE(Rate,X_test,y_test)
-        print("测试集上的MAE：{0}".format(MAE))
 
     def RecommendtoUser(self,user,item_num,sparse_matrix):
         '''
@@ -269,6 +244,7 @@ class LFM:
             选出前item_num*random_times个物品，然后随机从这个列表选出item_num个。
         '''
         #得到用户对各个物品的预测评分
+
         user_rating = np.dot(self.Up[user],self.VTp) #(1,13) (13,1683)
         user_rating_len = len(user_rating)
         userAll = sparse_matrix.getrow(user)
@@ -315,10 +291,50 @@ class LFM:
         similarity_items = np.array([x+1 for x in similarity_items])
         return similarity_items
 
+    def getCoverage(self,X_test,sparse_matrix,predict_num):
+        '''
+            返回覆盖率和基尼指数
+        '''
+        recommend_list = []
+        for item in X_test:
+            topkItems = self.RecommendtoUser(item[0],predict_num,sparse_matrix)
+            recommend_list = recommend_list + tokItems
+        
+        coverage = len(set(recommend_list)) / self.itemMax  #推荐物品的覆盖率
+        times = {}
+        for i in set(recommend_list):
+            times[i] = recommend_list.count(i)
+        j = 1
+        n = len(times)
+        G = 0
+        for item,weight in sorted(times.items(),key=operator.itemgetter(1)):
+            G += (2*j-n-1)*weight
+        return coverage, G/float(n-1)
+
+    #训练之后的测试集的总误差
+    def lfm_test(self, X_test, y_test):
+        # print("最后的训练结果：")
+        # print(self.Up)
+        # print(self.VTp)
+        Rate = np.dot(self.Up, self.VTp)
+        sum1 = 0.0
+        for i in range(len(y_test)):
+            # if i < 10:
+            #     print( Rate[int(X_test[i,0]),int(X_test[i,1])]) #-------------------------------
+            sum1 += math.fabs(y_test[i] -
+                              Rate[int(X_test[i, 0]), int(X_test[i, 1])])
+        # 573188(10),51992(20),46243(40),36958(100)
+        print("在测试集上的总分误差：{0}s".format(sum1))
+        RMSE, MAE = self.Get_RMSEandMAE(Rate, X_test, y_test)
+        # 2.29(10)，2.13(20),1.93(40),1.57(100)
+        print("测试集上的回归误差RSE：{0}".format(RSE))
+        # MAE = self.getMAE(Rate,X_test,y_test)
+        print("测试集上的MAE：{0}".format(MAE))
+
 def ReadMysql(host,username,password,database):
     db = pymysql.connect(host,username,password,database)
     cursor = db.cursor()
-    cursor.execute("select userID, movieID, rating from rating100k")
+    cursor.execute("select userID, movieID, rating from ratings")
     results = cursor.fetchall()
     userID, movieID, rating = [],[],[]
     for item in results:
@@ -331,19 +347,78 @@ def ReadMysql(host,username,password,database):
     return csr_matrix((np.array(rating),(np.array(userID), np.array(movieID))), shape=(1000,2000))#shape = (6500,4500))
 
 
+# global _lfm
+# _lfm = LFM(lfm_num=10)  # lfm_num 设置模型隐向量的维度
+# global _sparse_matrix
 
+# def init():
+#     # self._lfm
+#     # self._sparse_matrix
+#     # self.flush()
+#     # global _lfm
+#     # global _sparse_matrix
+#     try:
+#         with open(r'E:/MyProject_test/Recommend_code_origin/lfm_sql.pkl', 'rb') as f:
+#             _lfm = pickle.loads(f.read())
+#             print("global var读取成功")
+#     except IOError:
+#         print("File not exist! 尼玛")
+
+#     host = "localhost"
+#     username = "root"
+#     password = "112803"
+#     database = "mrtest"
+#     _sparse_matrix = ReadMysql(host, username, password, database)
+
+
+# init()
+# def flush():
+#     # _lfm = LFM(lfm_num=10)  # lfm_num 设置模型隐向量的维度
+#     #如果之前训练的模型已经存在，则直接读取文件，恢复模型
+#     print(os.path.abspath(__file__))
+#     print("nooo")
+#     try:
+#         with open(r'./lfm_sql.pkl','rb') as f:
+#             _lfm = pickle.loads(f.read())
+#             print("global var读取成功")
+#     except IOError:
+#         print("File not exist!")
+    
+#     host = "localhost"
+#     username = "root"
+#     password = "112803"
+#     database = "mrtest"
+#     _sparse_matrix = ReadMysql(host, username, password, database)
+# def get_value():
+#     return _lfm, _sparse_matrix
+# def get_flushval():
+#     flush()
+#     return _lfm, _sparse_matrix
+# global lfm
+
+
+#给出scipy稀疏矩阵的存储文件的路径，传入路径返回训练和测试数据集
+# npz_path = r'E:\MyProject\Recommend_code_origin\sparse_matrix_100k.npz'
+# host = "localhost"
+# username = "root"
+# password = "112803"
+# sparse_matrix = ReadMysql(host,username,password,database)
+# globalvalue = globalvar()
     
 def test():
-    start = time.clock()
-    lfm = LFM(lfm_num = 10)  #lfm_num 设置模型隐向量的维度
+    
 
+    lfm = LFM(lfm_num=10)  # lfm_num 设置模型隐向量的维度
     #如果之前训练的模型已经存在，则直接读取文件，恢复模型
+    # print(os.path.abspath(__file__))
+    # print("nooo")
     try:
-        with open('lfm_sql.pkl','rb') as f:
+        with open(r'./lfm_sql.pkl','rb') as f:
             lfm = pickle.loads(f.read())
+            print("读取成功")
     except IOError:
         print("File not exist!")
-    
+    # return 
     #给出scipy稀疏矩阵的存储文件的路径，传入路径返回训练和测试数据集
     # npz_path = r'E:\MyProject\Recommend_code_origin\sparse_matrix_100k.npz'
     host = "localhost"
@@ -354,7 +429,7 @@ def test():
     X_train,X_test,y_train,y_test = lfm.Fit(sparse_matrix)
 
     #模型的训练    
-    lfm.Train(X_train,y_train, alpha = 0.005,lambda_u = 0.1,lambda_i = 0.12,train_times = 10)
+    lfm.Train(X_train,y_train, alpha = 0.005,lambda_u = 0.1,lambda_i = 0.12,train_times = 2)
     #1m: 0.001 0.2 0.2 10
     #100k: 0.07 0.1 0.12 100  
     #模型的测试
@@ -365,15 +440,21 @@ def test():
     output_file.write(lfm_str)
     output_file.close()
 
+
     #读出稀疏矩阵，用户推荐
     # sparse_matrix = load_npz(npz_path)
     #给用户234推荐5个电影
     #print(lfm.RecommendtoUser(234,5,sparse_matrix))
     #推荐与206相似的6个电影
     #print(lfm.Recommend_similary_items(206,6))
-    end = time.clock()
-
-    print(end - start)
-
+# lfm = LFM(lfm_num= 10)  # lfm_num 设置模型隐向量的维度
+# try:
+#     with open('MyProject_test/Recommend_code_origin/lfm_sql.pkl', 'rb') as f:
+#         lfm = pickle.loads(f.read())
+# except IOError:
+#     print("File not exist!")
 if __name__ == '__main__':
     test()
+
+
+

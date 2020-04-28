@@ -1,4 +1,4 @@
-#KNN3的结构调整和类
+#KNN4.py的基础上添加评价指标
 from sklearn import neighbors
 import numpy as np
 from sklearn import model_selection
@@ -13,8 +13,8 @@ import pymysql
 from LFM_sql import ReadMysql
 import pickle
 from sklearn.externals import joblib
-
-
+import random
+import operator
 '''
 函数解释：
     numpy的nonzero函数:
@@ -30,13 +30,34 @@ from sklearn.externals import joblib
 def Data_process(host, username, password, database) -> np.mat:
     db = pymysql.connect(host, username, password, database)
     cursor = db.cursor()
-    cursor.execute("select userID, movieID, rating from rating100k")
+    cursor.execute("select userID, movieID, rating from ratings")
     results = cursor.fetchall()
     # userID, movieID, rating = [],[],[]
     data = np.mat(np.zeros((6100, 4100)))  # 矩阵行为用户id,列为Movie id
+    print(len(results))
+    testCaseLoc = random.sample(range(0,len(results)-1),int(0.2*(len(results)-1)))  #获得哪些位置作为测试集
+    testCaseLoc.sort()
+    # print(testCaseLoc)
+    # print(len(testCaseLoc))
+    cnt = 0
+    testLoc = 0
+    testCaseLocLen = len(testCaseLoc)
+    testCase = []
+    trainCase = []
+    userMax,itemMax = 0,0
     for item in results:
+        if testLoc < testCaseLocLen and cnt == testCaseLoc[testLoc]:
+            cnt += 1
+            testLoc += 1
+            testCase.append([item[0]-1,item[1]-1,item[2]])
+            continue
         data[item[0]-1, item[1]-1] = item[2]
-    return data
+        cnt += 1
+        userMax = max(userMax, item[0]-1)
+        itemMax = max(itemMax, item[1]-1)
+        trainCase.append([item[0]-1,item[1]-1,item[2]])
+
+    return data,trainCase,testCase,userMax,itemMax
 
 
 def Mean_centered(origin_data: np.mat) -> np.mat:  #
@@ -66,12 +87,14 @@ def Mean_centered(origin_data: np.mat) -> np.mat:  #
 
 
 class KNN:
-    def __init__(self):
+    def __init__(self,userMax = 0,itemMax = 0):
         # self.rating_denominator = None
         self.denominatorA = None
         self.denominatorB = None
         self.rating_nominator = None
         self.similarity_item_matrix = None
+        self.userMax = userMax
+        self.itemMax = itemMax
 
         # return mean_centered_data.T#和上面origin_data的转置结合起来就是列均值中心化
     def Cosine_similarity(self, inA: np.mat, inB: np.mat, item1: int, item2: int) -> float:  # 调整余弦
@@ -83,12 +106,13 @@ class KNN:
                 相似度 float
             复杂度：O(d) d为降维后的用户维度
         '''
-        punishment_factor = [
-            1/math.log(math.e, 2+math.fabs(a - b)) for a, b in zip(inA, inB)]
-        inA2 = [(a*b)[0, 0] for a, b in zip(inA, punishment_factor)]
-        inA2 = np.array(inA2)
-        inA2 = inA2.reshape(1, inA2.shape[0])
-        inA2 = np.mat(inA2)
+        # punishment_factor = [
+        #     1/math.log(math.e, 2+math.fabs(a - b)) for a, b in zip(inA, inB)]
+        # inA2 = [(a*b)[0, 0] for a, b in zip(inA, punishment_factor)]
+        # inA2 = np.array(inA2)
+        # inA2 = inA2.reshape(1, inA2.shape[0])
+        # inA2 = np.mat(inA2)
+        inA2 = inA
         numerator = float(inA2 * inB)
         # 存储分子
         self.rating_nominator[item1,
@@ -100,7 +124,7 @@ class KNN:
         denominator = self.denominatorA[item1, item2] * \
             self.denominatorB[item1, item2]  # 乘法改成加法
         # self.rating_denominator[item1,item2] = self.rating_denominator[item2,item1] = denominator ** 2 #存储分母两个元素
-        return numerator/(denominator+0.2)
+        return numerator/(denominator+0.0000001)
 
     def Pearson_similarity(self, inA: np.mat, inB: np.mat) -> float:
         '''
@@ -286,7 +310,7 @@ class KNN:
         # print('un',unrated_item)
         len1 = len(rated_item)
         len2 = len(unrated_item)
-        print(len1, len2)
+        # print(len1, len2)
         # print(similarity_item_matrix)
 
         recommend_reasons_num = 2
@@ -372,7 +396,8 @@ class KNN:
         # print(predict_rating)
         score = -predict_rating[:, 0]
         pos = predict_rating[:, 1]
-        recommend_reasons_items_final = predict_rating[:, 2:min(2+recommend_reasons_num, 2+k_most_related_r)]  # 最优物品编号
+        recommend_reasons_items_final = predict_rating[:, 2:min(
+            2+recommend_reasons_num, 2+k_most_related_r)]  # 最优物品编号
         # print(predict_rating.shape)
         # print(pos,score)
         # score = predict_rating[k-predict_num:-1,0]
@@ -398,7 +423,7 @@ class KNN:
                 r0 = origin_data[user, item]
                 r1 = origin_data[user, item1]
                 self.rating_nominator[item1, item] = self.rating_nominator[item, item1] = (
-                    self.rating_nominator[item1, item] + (r0 - user_av) * (r1 - user_av) * (1/math.log(math.e, 2+math.fabs(r0 - r1))))
+                    self.rating_nominator[item1, item] + (r0 - user_av) * (r1 - user_av) )
                 # print(type(denominatorA))
                 self.denominatorA[item, item1] = self.denominatorA[item1, item] = (
                     self.denominatorA[item1, item] + (r0 - user_av) ** 2)
@@ -408,7 +433,83 @@ class KNN:
                 tmp = (self.denominatorA[item, item1]
                        * self.denominatorB[item1, item])
                 self.similarity_item_matrix[item,
-                                            item1] = self.similarity_item_matrix[item1, item] = tmp / math.sqrt(tmp)
+                                            item1] = self.similarity_item_matrix[item1, item] = tmp / math.sqrt(self.rating_nominator)
+    
+    def predictRating(self,user,movie,origin_data,topK):
+        rated_item = np.nonzero(origin_data[user, :] > 0)[1]
+        # print(rated_item)
+        # print(len(rated_item))
+        # print(self.similarity_item_matrix.shape)
+        similarities = []
+        for item in rated_item:
+            similarities.append(self.similarity_item_matrix[movie,item])
+        # similarities = self.similarity_item_matrix[movie,rated_item]
+        # print(len(similarities)-1)
+        similary_item = np.argpartition(similarities,min(topK-1,len(similarities)-1),axis=0)[0:]
+        # print(similary_item)
+        similarities_sum = 0.0
+        rating = 0.0
+        cnt = 0
+        for i in range(min(topK,len(similarities))):
+            # if cnt < 3:
+            #     cnt += 1
+            #     print("相似度")
+            #     print(similarities[similary_item[i]],
+            # origin_data[user, rated_item[similary_item[i]]])
+            # self.similarity_item_matrix[movie,similary_item[i]]
+            rating +=  similarities[similary_item[i]] * origin_data[user,rated_item[similary_item[i]]]
+            similarities_sum += math.fabs(similarities[similary_item[i]])
+        final = math.fabs(rating / similarities_sum)
+        final = max(min(5.0,final),0.0)
+        return final
+
+    def getRMSEandMAE(self,origin_data,testCase,topK):
+        RMSE = 0.0
+        MAE = 0.0
+        cnt = 1 
+        for item in testCase:
+            # print(item)
+            user, movie, rating = item[0], item[1], item[2]
+            predict_rating = self.predictRating(user, movie, origin_data,5)
+            if cnt < 100:
+                cnt += 1
+                print("预测评分")
+                print(predict_rating, rating)
+            RMSE += (predict_rating - rating) ** 2
+            MAE += math.fabs(predict_rating - rating)
+        return math.sqrt(RMSE/len(testCase)), MAE/len(testCase)
+
+    def getCoverage(self, origin_data, testCase, topK):
+        recommend_list = []
+        predict_num = 5
+        for item in testCase:
+            user,movie,rating = item[0],item[1],item[2]
+            top_k_item, top_k_score, recommend_reasons_items_final = self.ItemRecommend(origin_data,user,topK,predict_num)
+            recommend_list = recommend_list + top_k_item
+        coverage = len(set(recommend_list)) / self.itemMax  #推荐物品的覆盖率
+        times = {}
+        for i in set(recommend_list):
+            times[i] = recommend_list.count(i)
+        j = 1
+        n = len(times)
+        G = 0
+        for item,weight in sorted(times.items(),key=operator.itemgetter(1)):
+            G += (2*j-n-1)*weight
+        return coverage, G/float(n-1)
+
+    def getCoverage2(self,trainCase):
+        itemList = np.array(trainCase)[:,1]
+        itemList = list(itemList)
+        trainCoverage = len(set(itemList))/self.itemMax
+        times = {}
+        for i in set(itemList):
+            times[i] = itemList.count(i)
+        j = 1
+        n = len(times)
+        G = 0
+        for item, weight in sorted(times.items(), key=operator.itemgetter(1)):
+            G += (2*j-n-1)*weight
+        return trainCoverage, G/float(n-1)
 
 
 def test(user, k=5, predict_num=5):
@@ -419,101 +520,64 @@ def test(user, k=5, predict_num=5):
 
     start = time.clock()
 
-    # file_path = 'E:\Bigdata\ml-100k\\u.data'
-    origin_data = Data_process(host, username, password, database)
-    # print(origin_data)
+    # # file_path = 'E:\Bigdata\ml-100k\\u.data'
+    origin_data,trainCase,testCase,userMax,itemMax = Data_process(host, username, password, database)
+    # # print(origin_data)
 
-    mean_centered_data = Mean_centered(origin_data)
-    # print(mean_centered_data)  #打印均值中心化的评分矩阵
-    knn = KNN()
+    # mean_centered_data = Mean_centered(origin_data)
+    # # print(mean_centered_data)  #打印均值中心化的评分矩阵
+    knn = KNN(userMax,itemMax)
     print("begin")
     try:
         # with open('knn.pkl','rb') as f:
             # knn = pickle.load(f.read())
-        knn = joblib.load('./knn.m')
+        knn = joblib.load('./knn3.m')
+        # print(knn.similarity_item_matrix[0:20,0:10])
     except IOError:
         print("File not exist!")
     if knn.similarity_item_matrix is None:
         print("None")
         knn.Calculate_items_similarty(origin_data, mean_centered_data)
-        joblib.dump(knn, './knn.m')
+        joblib.dump(knn, './knn1.m')
+    # print(testCase)
+    print("RMSE and MAE caculate begins!")
+    RMSE, MAE = knn.getRMSEandMAE(origin_data, testCase, 5)
+    print("RMSE: ",RMSE)
+    print("MAE: ",MAE)
     #--------------------------------------------------------------------------------------
     # output_file = open('knmdn.pkl','wb')
     # output_file.write(pickle.dumps(knn.similarity_item_matrix))
     # output_file.close()
-    
-    print("nihao")
-    user = 5
-    k = 10
-    top_k_item,top_k_score,recommend_reasons_items = knn.ItemRecommend(origin_data,user,k,predict_num)
-    # # top_k_item,top_k_score,recommend_reasons_items = ItemRecommend2(origin_data,mean_centered_data,'minkowski',3,2,2,2)
 
-    for item,score,reason_items in zip(top_k_item,top_k_score,recommend_reasons_items):
-        print()
-        print("推荐的电影：%d\n预测用户 %d 对电影 %d 的评分为：%f"%(item+1,user,item,score))
-        print("因为用户%d之前看过"%user,end = ' ')#
-        for it in reason_items:
-            print("电影%d"%it,end = ' ')
-        print()
-    
-    knn.Increment_update(5, 1200, 5,origin_data)
-    print('*'*50)
-    top_k_item, top_k_score, recommend_reasons_items = knn.ItemRecommend(
-        origin_data, user, k, predict_num)
-    # # top_k_item,top_k_score,recommend_reasons_items = ItemRecommend2(origin_data,mean_centered_data,'minkowski',3,2,2,2)
+    # print("nihao")
+    # user = 5
+    # k = 10
+    # top_k_item, top_k_score, recommend_reasons_items = knn.ItemRecommend(
+    #     origin_data, user, k, predict_num)
+    # # # top_k_item,top_k_score,recommend_reasons_items = ItemRecommend2(origin_data,mean_centered_data,'minkowski',3,2,2,2)
 
-    for item, score, reason_items in zip(top_k_item, top_k_score, recommend_reasons_items):
-        print()
-        print("推荐的电影：%d\n预测用户 %d 对电影 %d 的评分为：%f" % (item+1, user, item, score))
-        print("因为用户%d之前看过" % user, end=' ')
-        for it in reason_items:
-            print("电影%d" % it, end=' ')
-        print()
+    # for item, score, reason_items in zip(top_k_item, top_k_score, recommend_reasons_items):
+    #     print()
+    #     print("推荐的电影：%d\n预测用户 %d 对电影 %d 的评分为：%f" % (item+1, user, item, score))
+    #     print("因为用户%d之前看过" % user, end=' ')
+    #     for it in reason_items:
+    #         print("电影%d" % it, end=' ')
+    #     print()
 
-    # print(reason_items)
-    # print("推荐的电影：{},预测 {} 对电影 {} 的评分为：{}",item,user,item,score,)
-    # print("因为用户%d之前看过电影",user,end = ' ')
-    # print(reason_items)
-    # print(top_k_item)
-    # print("相应的评分：")
-    # print(top_k_score)
-    # print("相应的推荐理由")
-    # print(recommend_reasons_items)  #推荐理由也可以了
-    # print('nihao')
+    # knn.Increment_update(5, 1200, 5, origin_data)
+    # print('*'*50)
+    # top_k_item, top_k_score, recommend_reasons_items = knn.ItemRecommend(
+    #     origin_data, user, k, predict_num)
+    # # # top_k_item,top_k_score,recommend_reasons_items = ItemRecommend2(origin_data,mean_centered_data,'minkowski',3,2,2,2)
 
-    #下面是增料更新
-    # while(True):
-    #     print("please input user item rating or -1 -1 -1 to exit!")
-    #     user,item,rating = map(int,input().split(" "))
-    #     user -= 1
-    #     item -= 1
-    #     origin_data[user,item] = rating
-    #     user_item = np.nonzero(origin_data[user,:])[1]
-    #     user_av = np.mean(origin_data[user,user_item])
-    #     if(user < 0):
-    #         break
-    #     for item1 in user_item:
-    #         # print(item1)
-    #         if(item1 == item):
-    #             continue
-    #         else:
-    #             r0 = origin_data[user,item]
-    #             r1 = origin_data[user,item1]
-    #             rating_nominator[item1,item] = rating_nominator[item,item1] = (rating_nominator[item1,item] + (r0 - user_av) * (r1 - user_av) * (1/math.log(math.e,2+math.fabs(r0 - r1))))
-    #             # print(type(denominatorA))
-    #             denominatorA[item,item1] = denominatorA[item1,item] = (denominatorA[item1,item] + (r0 - user_av) ** 2)
-    #             denominatorB[item,item1] = denominatorB[item1,item] = (denominatorB[item1,item] + (r1 - user_av) ** 2)
-    #             rating_denominator[item,item1] = rating_denominator[item1,item] = (denominatorA[item,item1] * denominatorB[item1,item])
-    #             similarity_item_matrix[item,item1] = similarity_item_matrix[item1,item] =rating_nominator[item1,item]/ math.sqrt(rating_denominator[item,item1])
-    #     top_k_item,top_k_score,recommend_reasons_items = ItemRecommend(origin_data,similarity_item_matrix,3,2,2)
-    # # top_k_item,top_k_score,recommend_reasons_items = ItemRecommend2(origin_data,mean_centered_data,'minkowski',3,2,2,2)
-    #     for item,score,reason_items in zip(top_k_item,top_k_score,recommend_reasons_items):
-    #         print()
-    #         print("推荐的电影：%d\n预测用户 %d 对电影 %d 的评分为：%f"%(item+1,user,item,score))
-    #         print("因为用户%d之前看过"%user,end = ' ')#
-    #         for it in reason_items:
-    #             print("电影%d"%it,end = ' ')
-    #         print()
+    # for item, score, reason_items in zip(top_k_item, top_k_score, recommend_reasons_items):
+    #     print()
+    #     print("推荐的电影：%d\n预测用户 %d 对电影 %d 的评分为：%f" % (item+1, user, item, score))
+    #     print("因为用户%d之前看过" % user, end=' ')
+    #     for it in reason_items:
+    #         print("电影%d" % it, end=' ')
+    #     print()
+    # print(knn.predictRating(1-1,1197-1,origin_data,5))
 
     end = time.clock()
 
