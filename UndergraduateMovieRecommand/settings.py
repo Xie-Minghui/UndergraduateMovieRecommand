@@ -88,19 +88,18 @@ WSGI_APPLICATION = 'UndergraduateMovieRecommand.wsgi.application'
 #         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
 #     }
 # }
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'db_for_project',
-        'USER': 'root',
-        'PASSWORD': 'MySqlxmhllly@17227016',
-        'HOST': 'gz-cdb-5clnvoq5.sql.tencentcdb.com',
-        'PORT': '60720',
-        'OPTIONS': {
-            "init_command": "SET sql_mode='STRICT_TRANS_TABLES'"
-        },
-    }
-}
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',   # 数据库引擎
+#         'NAME': 'movieproject',  # 数据库名，先前创建的
+#         'USER': 'root',     # 用户名，可以自己创建用户
+#         'PASSWORD': 'Lin123',  # 密码
+#         'HOST': 'localhost',  # mysql服务所在的主机ip
+#         'PORT': '3306',         # mysql服务端口
+#         'OPTIONS': {'charset': 'utf8mb4'}
+#     }
+# }
 
 
 # Password validation

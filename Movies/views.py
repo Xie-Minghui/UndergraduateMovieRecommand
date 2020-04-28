@@ -97,13 +97,13 @@ def get_movies(request):
     result = {
         "data": [
             {
-                "title": "千与千寻",
-                "score": "9.3",
-                "date": "2019",
-                "type": "剧情,动画,奇幻",
+                "title": "玩具总动员",
+                "score": "8.4",
+                "date": "1995",
+                "type": "喜剧,动画,家庭",
                 # "img": "/image/MovieCover/20200131/p2557573348.webp",
-                "img": "https://img1.doubanio.com/view/photo/s_ratio_poster/public/p2557573348.webp",
-                "url": "../detail/1291561"
+                "img": "https://img9.doubanio.com/view/photo/s_ratio_poster/public/p2220722175.jpg",
+                "url": "../detail/1"
             }
         ]
     }

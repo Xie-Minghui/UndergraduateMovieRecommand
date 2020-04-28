@@ -26,5 +26,5 @@ urlpatterns = [
     path('api/getMovies/',M_v.get_movies),
     # path('api/getRecommendMovies'),
     path('api/getMovieDetail/<int:movie_id>',M_v.return_movie_json),
-    path('api/login/',U_v.login),
+    path('api/login',U_v.login),
 ]

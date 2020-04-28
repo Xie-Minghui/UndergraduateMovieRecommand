@@ -6,8 +6,9 @@ class Movie(models.Model):
     movie_id = models.IntegerField(primary_key=True, verbose_name="电影id")
     douban_id = models.IntegerField(null=True, blank=True, verbose_name="豆瓣id")
     movie_name = models.CharField(max_length=100, verbose_name="电影片名")
-    movie_length = models.IntegerField(null=True, blank=True, default=0, verbose_name="电影片长")
-    movie_releaseTime = models.CharField(max_length=12, verbose_name="上映时间")
+    movie_length = models.CharField(max_length=20, null=True, blank=True, verbose_name="电影片长")
+    movie_year = models.CharField(max_length=4, verbose_name='电影年代')
+    movie_releaseTime = models.CharField(max_length=12, null=True, blank=True, verbose_name="上映时间")
     movie_showPos = models.CharField(max_length=10, null=True, blank=True, verbose_name="上映地区")
     movie_intro = models.TextField(max_length=1024, null=True, blank=True, verbose_name='剧情简介')
     # movie_cover = models.ImageField(upload_to='MovieCover/%Y%m%d',null=True,blank=True, verbose_name='电影封面图片路径')
@@ -37,7 +38,7 @@ class RoleTable(models.Model): # 角色表，存放电影的演员及导演信�
 
 class MovieType(models.Model):  # 电影类别表
     type_id = models.AutoField(primary_key=True, verbose_name='电影类别id')
-    type_name = models.CharField(max_length=10, unique=True, verbose_name='电影类别名称')
+    type_name = models.CharField(max_length=20, unique=True, verbose_name='电影类别名称')
 
     def __str__(self):
         return self.type_name
@@ -45,7 +46,13 @@ class MovieType(models.Model):  # 电影类别表
 
 class MovieLab(models.Model): # 电影标签
     lab_id = models.AutoField(primary_key=True,verbose_name="电影标签id")
-    lab_content = models.CharField(max_length=10,verbose_name="电影标签内容")
+    lab_content = models.CharField(max_length=50,verbose_name="电影标签内容")
 
     def __str__(self):
         return self.lab_content
+
+
+class MovieComment(models.Model):  # 电影在豆瓣上的热门短评，由豆瓣api得到
+    content = models.TextField(max_length=1024, verbose_name='评论内容')
+    author_name = models.CharField(max_length=50, verbose_name='评论作者')
+    movie = models.ForeignKey(Movie,on_delete=models.CASCADE)
