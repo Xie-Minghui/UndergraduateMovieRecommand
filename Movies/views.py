@@ -1,6 +1,6 @@
 from django.shortcuts import render,redirect
 from django.http import HttpResponse
-from Movies.models import Movie,MovieLab
+from Movies.models import Movie,MovieLab,MovieComment
 from Comments.models import Comments
 from Filmmakers.models import Celebrity
 import os
@@ -34,11 +34,12 @@ def return_home_movies(request):
 
 def return_movie_json(request, movie_id):
     movie = Movie.objects.get(movie_id=movie_id)
-    comment_objects = Comments.objects.filter(movie=movie)
+    comment_objects = MovieComment.objects.filter(movie=movie)
     comment_list = []
     if comment_objects:
         for comment in comment_objects:
-            comment_list.append({"user": comment.user.user_name,"content":comment.content})
+            # comment_list.append({"user": comment.user.user_name,"content":comment.content})
+            comment_list.append({"user": comment.author_name, "content": comment.content})
 
     lab_objects = movie.lab.all()  # return all labs objects for this movie
     lab_list = []
@@ -65,7 +66,8 @@ def return_movie_json(request, movie_id):
     if actor_objects:
         for actor in actor_objects:
             actors = actors + actor.celebrity_name + ' '
-            actor_imgs.append({"img": "/image/"+str(actor.celebrity_cover)})
+            # actor_imgs.append({"img": "/image/"+str(actor.celebrity_cover)})
+            actor_imgs.append({"img": actor.celebrity_cover})
         actors = actors[:-1]
 
     result = {

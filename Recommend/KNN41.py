@@ -27,10 +27,10 @@ import joblib
          则原矩阵应该转化为numpy的array
 '''
 
-def Data_process(host,username,password,database)->np.mat:
-    db = pymysql.connect(host,username,password,database)
+def Data_process(host,port,username,password,database)->np.mat:
+    db = pymysql.connect(host = host,user = username,password = password,database = database,port = port, charset='utf8mb4')
     cursor = db.cursor()
-    cursor.execute("select userID, movieID, rating from ratings")
+    cursor.execute("select userID_id, movieID_id, rating from Rating_rating")
     results = cursor.fetchall()
     # userID, movieID, rating = [],[],[]
     data = np.mat(np.zeros((6100,4100)))  #矩阵行为用户id,列为Movie id

@@ -29,17 +29,9 @@ class User(models.Model):
     gender = models.CharField(null=True, blank=True, max_length=10, choices=genderType, default="男", verbose_name='性别')
     user_ageSec = models.IntegerField(null=True, blank=True, verbose_name='用户年龄区间')
     user_occupation = models.CharField(max_length=50, null=True, blank=True, verbose_name='用户职业')
-    # 用户浏览历史模型已存于History中，此处可取消
-    # browser_list = models.CharField(max_length=300,default="[]",verbose_name='浏览')#浏览表的id
-    # browser_number = models.IntegerField(default=0,verbose_name='浏览量')
-    # have_watched = models.CharField(max_length=300,default="[]",verbose_name='观看')#已看过表的id
-    # watch_number = models.IntegerField(default=0,verbose_name='观看量')
-    # collection_list = models.CharField(max_length=300,default="[]",verbose_name='收藏')#收藏表的id
-    # collect_number = models.IntegerField(default=0,verbose_name='收藏量')
 
-    # prefer_actors = models.CharField(max_length=300,default="[]",verbose_name='偏爱演员')#偏爱演员表的id
-    # prefer_directors = models.CharField(max_length=300,default="[]",verbose_name='偏爱的导演')#偏爱导演表的id
-
+    collected_movie = models.ManyToManyField(to='Movies.Movie', related_name='collected_by_user')  # 用户收藏列表
+    rated_movie = models.ManyToManyField(to='Movies.Movie', through='Rating.Rating', related_name='rated_by_user')  # 用户评分过的电影中间表
     # recommend_movies = models.CharField(max_length=300,default="[]",verbose_name='推荐的电影列表')#推荐的电影列表的id
 
     # objects = UsersManager()#用户管理类

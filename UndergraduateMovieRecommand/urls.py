@@ -28,4 +28,6 @@ urlpatterns = [
     # path('api/getRecommendMovies'),
     path('api/getMovieDetail/<int:movie_id>',M_v.return_movie_json),
     path('api/login',U_v.login),
+    path('api/rating/',U_v.ratMovie),
+    path('api/toCollect/',U_v.collectMovie),
 ]

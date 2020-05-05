@@ -3,6 +3,7 @@ upload
 *.sqlite3
 *.idea
 *.pyc
+*.pkl
 .idea
 .vscode
 .history

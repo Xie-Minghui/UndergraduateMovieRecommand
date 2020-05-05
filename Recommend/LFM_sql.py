@@ -10,6 +10,7 @@ import pickle
 import os
 import pymysql
 import operator
+from django.conf import settings
 
 class LFM:
     def __init__(self,lfm_num = 0):
@@ -331,10 +332,10 @@ class LFM:
         # MAE = self.getMAE(Rate,X_test,y_test)
         print("测试集上的MAE：{0}".format(MAE))
 
-def ReadMysql(host,username,password,database):
-    db = pymysql.connect(host,username,password,database)
+def ReadMysql(host,port,username,password,database):
+    db = pymysql.connect(host = host,user = username,password = password,database = database,port = port, charset='utf8mb4')
     cursor = db.cursor()
-    cursor.execute("select userID, movieID, rating from ratings")
+    cursor.execute("select userID_id, movieID_id, rating from Rating_rating")
     results = cursor.fetchall()
     userID, movieID, rating = [],[],[]
     for item in results:
@@ -362,11 +363,21 @@ def test():
     # return 
     #给出scipy稀疏矩阵的存储文件的路径，传入路径返回训练和测试数据集
     # npz_path = r'E:\MyProject\Recommend_code_origin\sparse_matrix_100k.npz'
-    host = "localhost"
-    username = "root"
-    password = "112803"
-    database = "mrtest"
-    sparse_matrix = ReadMysql(host,username,password,database)
+    # host = "localhost"
+    # username = "root"
+    # password = "112803"
+    # database = "mrtest"
+
+    # Configuration = {
+    #     'host': settings.DATABASES['default']['HOST'],
+    #     'port': settings.DATABASES['default']['PORT'],
+    #     'username': settings.DATABASES['default']['USER'],
+    #     'password': settings.DATABASES['default']['PASSWORD'],
+    #     'database': settings.DATABASES['default']['NAME']
+    # }
+    sparse_matrix = ReadMysql(settings.DATABASES['default']['HOST'],settings.DATABASES['default']['PORT'],
+                              settings.DATABASES['default']['USER'],settings.DATABASES['default']['PASSWORD'],
+                              settings.DATABASES['default']['NAME'])
     X_train,X_test,y_train,y_test = lfm.Fit(sparse_matrix)
 
     #模型的训练    

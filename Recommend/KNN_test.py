@@ -3,17 +3,19 @@ import pickle
 # from sklearn.externals import joblib
 import joblib
 # from Recommend.LFM_sql import LFM, ReadMysql
+from django.conf import settings
 from Recommend.KNN41 import KNN, Data_process
 Configuration = {
-    'host': "localhost",
-    'username': "root",
-    'password': "112803",
-    'database': "mrtest"
+    'host': settings.DATABASES['default']['HOST'],
+    'port': settings.DATABASES['default']['PORT'],
+    'username': settings.DATABASES['default']['USER'],
+    'password': settings.DATABASES['default']['PASSWORD'],
+    'database': settings.DATABASES['default']['NAME']
 }
 # lfm = LFM(lfm_num=10)  # lfm_num 设置模型隐向量的维度
 knn = KNN()
 origin_data = Data_process(
-    Configuration['host'], Configuration['username'], Configuration['password'], Configuration['database'])
+    Configuration['host'], Configuration['port'], Configuration['username'], Configuration['password'], Configuration['database'])
 #   print("begin")
 try:
     # with open('knn.pkl','rb') as f:

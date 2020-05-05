@@ -146,3 +146,7 @@ STATIC_ROOT = os.path.join(BASE_DIR,'/collect_static/') #设置静态文件的�
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'upload/')
 MEDIA_URL = '/upload/' #这个是在浏览器上访问该上传文件的url的前缀
+
+# session 设置过期时间
+SESSION_COOKIE_AGE = 3*24*60*60 # 3天
+SESSION_SAVE_EVERY_REQUEST = True
