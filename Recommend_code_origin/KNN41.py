@@ -10,7 +10,7 @@ from sklearn.neighbors import NearestNeighbors
 import math
 import copy
 import pymysql
-from LFM_sql import ReadMysql
+# from LFM_sql import ReadMysql
 import pickle
 from sklearn.externals import joblib
 
