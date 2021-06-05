@@ -37,7 +37,7 @@ Recommend_code_origin存储的测试代码，自动忽略。其他文件夹均�
 
 #### 技术说明
 
-前端采用React，后端采用Pthon的Django框架，机器学习部分使用sklearn。
+前端采用React，后端采用Pthon的Django框架，数据库采用Mysql。机器学习部分使用sklearn。
 
 #### 数据集说明
 
