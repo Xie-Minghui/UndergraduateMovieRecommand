@@ -42,6 +42,9 @@ Recommend_code_origin存储的测试代码，自动忽略。其他文件夹均�
 #### 数据集说明
 
 使用的是MovieLens数据集，包含4000多个用户，6000多部电影，100万左右个评分数据。
+数据集下载地址：
+链接：https://pan.baidu.com/s/18VDK-cjRFj_dy7mqJksZtA 
+提取码：nlp1 
 
 #### 使用说明
 
